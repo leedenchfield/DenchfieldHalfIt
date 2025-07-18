@@ -423,7 +423,7 @@
     const description = document.getElementById("newCommandDesc").value.trim();
 	const category = document.getElementById("newCommandCate").value.trim(); // --- Delete if not working ---
     if (!text) return alert("Challenge text cannot be empty");
-    db.collection("commands").add({ text, description }).then(() => {
+    db.collection("commands").add({ text, description, category }).then(() => { // --- Delete "category" if not working ---
       loadCommandsFromFirebase();
       document.getElementById("newCommandText").value = "";
       document.getElementById("newCommandDesc").value = "";
