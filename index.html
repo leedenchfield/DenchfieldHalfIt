@@ -8,14 +8,14 @@
     body {
       font-family: Arial, sans-serif;
       padding: 20px;
-      max-width: 800px;
+      max-width: 900px;
       margin: auto;
-      background-color: #fefefe;
-      color: #222;
+      background-color: white;
+      color: black;
       transition: background-color 0.3s, color 0.3s;
     }
-    body.dark {
-      background-color: #121212;
+    body.dark-mode {
+      background-color: #111;
       color: #eee;
     }
     input, button, select, textarea {
@@ -24,28 +24,6 @@
       margin: 5px 0;
       width: 100%;
       box-sizing: border-box;
-      border-radius: 4px;
-      border: 1px solid #ccc;
-      background: #fff;
-      color: #222;
-      transition: background-color 0.3s, color 0.3s;
-    }
-    body.dark input, body.dark select, body.dark textarea {
-      background: #222;
-      color: #eee;
-      border-color: #555;
-    }
-    button {
-      cursor: pointer;
-      border: none;
-      background-color: #007bff;
-      color: white;
-      font-weight: bold;
-      border-radius: 4px;
-      transition: background-color 0.3s;
-    }
-    button:hover {
-      background-color: #0056b3;
     }
     #commandList, #gameArea, #historyArea, #playerButtons {
       margin-top: 20px;
@@ -60,19 +38,20 @@
       background: #f0f0f0;
       border-radius: 5px;
       font-weight: bold;
-      transition: background-color 0.3s, color 0.3s;
+      text-align: center;
     }
-    body.dark .commandBox {
-      background: #333;
+    body.dark-mode .commandBox {
+      background: #222;
     }
     .descriptionBox {
       font-size: 0.9em;
-      margin: 10px 0;
+      margin: 10px 0 20px 0;
       font-style: italic;
+      text-align: center;
+      color: #555;
     }
-    .score {
-      font-size: 1.4em;
-      margin: 10px 0;
+    body.dark-mode .descriptionBox {
+      color: #aaa;
     }
     #scoreboard {
       background: #eef;
@@ -80,12 +59,20 @@
       margin-top: 10px;
       border-radius: 5px;
     }
-    body.dark #scoreboard {
+    body.dark-mode #scoreboard {
       background: #222;
     }
     #scoreboard ul {
       padding-left: 20px;
-      margin: 0;
+      list-style-type: none;
+    }
+    #scoreboard li {
+      margin: 4px 0;
+      font-weight: normal;
+    }
+    #scoreboard li.current-turn {
+      font-weight: bold;
+      color: #0044cc;
     }
     .player-btn {
       margin: 5px 5px 5px 0;
@@ -95,14 +82,16 @@
       border: none;
       border-radius: 4px;
       transition: 0.3s ease;
-      user-select: none;
-      display: inline-block;
     }
     .player-btn.selected {
       background-color: #0044cc;
       color: white;
       font-weight: bold;
       box-shadow: 0 0 5px #0044cc;
+    }
+    .player-btn.editing {
+      background-color: #faa;
+      color: #600;
     }
     .hardcore {
       color: red;
@@ -115,7 +104,6 @@
       border: none;
       border-radius: 3px;
       cursor: pointer;
-      user-select: none;
     }
     .edit-btn {
       background-color: #faa;
@@ -123,145 +111,104 @@
     .delete-btn {
       background-color: #fcc;
     }
-    #toggleCommandList, #toggleHistory {
+    #toggleCommandList {
       margin-top: 10px;
       cursor: pointer;
       background: #ddd;
       border: none;
       padding: 5px 10px;
       border-radius: 5px;
-      user-select: none;
-    }
-    body.dark #toggleCommandList, body.dark #toggleHistory {
-      background: #444;
-      color: #eee;
-    }
-    .current-player {
-      border: 2px solid #0044cc;
-      box-shadow: 0 0 10px #0044cc;
-    }
-    #playersList > div {
-      margin-bottom: 10px;
-      padding: 5px;
-      border: 1px solid #aaa;
-      border-radius: 4px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      background-color: #f7f7f7;
-      transition: background-color 0.3s;
-    }
-    body.dark #playersList > div {
-      background-color: #222;
-      border-color: #555;
-    }
-    .player-name-edit {
-      flex-grow: 1;
-      margin-right: 10px;
-    }
-    #playersList button {
-      margin-left: 5px;
     }
     #darkModeToggle {
-      margin-top: 10px;
-      cursor: pointer;
-      background: #666;
-      border: none;
+      margin: 10px 0;
       padding: 5px 10px;
+      background-color: #444;
+      color: white;
+      border: none;
       border-radius: 5px;
-      color: #fff;
-      user-select: none;
+      cursor: pointer;
+    }
+    #gameControls button {
       width: auto;
+      margin-right: 10px;
     }
-    body.dark #darkModeToggle {
-      background: #aaa;
-      color: #222;
+    #historyArea {
+      margin-top: 30px;
+      max-height: 200px;
+      overflow-y: auto;
+      border: 1px solid #ccc;
+      padding: 10px;
+      border-radius: 5px;
+      background: #fafafa;
+      font-size: 0.9em;
     }
-    #roundCountInput, #startingScoreInput {
-      max-width: 120px;
+    body.dark-mode #historyArea {
+      background: #222;
+      border-color: #444;
+      color: #eee;
+    }
+    #historyArea h3 {
+      margin-top: 0;
+    }
+    #roundSelector, #startingScore, #hardcoreToggle {
+      margin: 10px 0;
     }
   </style>
-  <!-- Firebase -->
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 </head>
 <body>
-  <h1>Denchfield Half-It Challenge!</h1>
-
-  <!-- Dark Mode Toggle -->
   <button id="darkModeToggle">Toggle Dark Mode</button>
 
-  <!-- Player Management -->
-  <section>
+  <div id="playerSection">
     <h2>Players</h2>
-    <div>
-      <input id="newPlayerName" placeholder="Add new player name" />
-      <button onclick="addPlayer()">Add Player</button>
-    </div>
-    <div id="playersList"></div>
-  </section>
+    <div id="playerButtons"></div>
+    <input type="text" id="newPlayerName" placeholder="Add player name" />
+    <button onclick="addPlayer()">Add Player</button>
+  </div>
 
-  <!-- Challenge Management -->
-  <section>
-    <h2>Challenges <button id="toggleCommandList">Toggle Challenge List</button></h2>
-    <div id="commandList"></div>
-    <div>
-      <input id="newCommandText" placeholder="New challenge text" />
-      <input id="newCommandDesc" placeholder="Optional description" />
-      <button onclick="addCommand()">Add Challenge</button>
-    </div>
-  </section>
+  <div id="settingsSection">
+    <label for="roundSelector">Number of Rounds:</label>
+    <input type="number" id="roundSelector" min="1" value="5" />
+    <label for="startingScore">Starting Score (default 0):</label>
+    <input type="number" id="startingScore" value="0" />
+    <label><input type="checkbox" id="hardcoreToggle" checked /> Enable Hardcore Mode</label>
+  </div>
 
-  <!-- Game Setup -->
-  <section>
-    <h2>Game Setup</h2>
-    <label>
-      Number of Rounds:
-      <input id="roundCountInput" type="number" min="1" value="10" />
-    </label>
-    <label>
-      Starting Score:
-      <input id="startingScoreInput" type="number" min="0" value="0" />
-    </label>
-    <label>
-      <input type="checkbox" id="enableHardcore" checked />
-      Enable Hardcore Mode (one random challenge per 10 rounds, not last round)
-    </label>
-  </section>
+  <button id="toggleCommandList">Toggle Challenge List</button>
+  <div id="commandList"></div>
+  <div>
+    <input id="newCommandText" placeholder="New challenge text" />
+    <input id="newCommandDesc" placeholder="Optional description" />
+    <button onclick="addCommand()">Add Challenge</button>
+  </div>
 
-  <!-- Game Area -->
-  <section id="gameArea" class="hidden">
-    <h2>Game In Progress</h2>
+  <div id="scoreboard">
+    <h3>Scoreboard</h3>
+    <ul id="scoreList"></ul>
+  </div>
+
+  <div id="gameArea" class="hidden">
     <div id="currentChallenge" class="commandBox"></div>
-    <div id="challengeDescription" class="descriptionBox"></div>
+    <div id="currentDescription" class="descriptionBox"></div>
 
-    <div id="currentPlayerTurn" style="margin-bottom: 10px; font-weight:bold; font-size:1.2em;"></div>
+    <div id="playerTurnInfo" style="text-align:center; font-weight:bold; margin-bottom:15px;"></div>
 
-    <div>
-      <button id="failBtn">Fail Challenge</button>
-      <input type="number" id="scoreInput" min="0" placeholder="Enter score achieved" />
-      <button id="submitScoreBtn">Submit Score</button>
-      <button id="undoBtn">Undo Last Action</button>
+    <div id="gameControls" style="text-align:center;">
+      <button onclick="submitScore()">Submit Score</button>
+      <button onclick="failChallenge()">Fail Challenge</button>
+      <button onclick="undoLast()">Undo</button>
+      <input type="number" id="scoreInput" placeholder="Score to add" style="width:100px; margin-left:10px;" />
     </div>
+  </div>
 
-    <div id="scoreboard"></div>
-
-    <button id="nextRoundBtn" class="hidden">Next Round</button>
-  </section>
-
-  <!-- Game Controls -->
-  <section>
-    <button id="startGameBtn">Start Game</button>
-  </section>
-
-  <!-- Game History -->
-  <section>
-    <h2>Game History <button id="toggleHistory">Toggle History</button></h2>
-    <ul id="historyList" style="max-height: 300px; overflow-y: auto; border: 1px solid #ccc; padding: 10px; list-style: none;"></ul>
-  </section>
+  <div id="historyArea" class="hidden">
+    <h3>Game History</h3>
+    <ul id="historyList"></ul>
+  </div>
 
   <script>
-    // Firebase config and init
+    // Initialize Firebase app with user-provided config
     const firebaseConfig = {
       apiKey: "AIzaSyAusKA2YiJTelSm54EJfRbVJMk0M6mh_WM",
       authDomain: "denchfield-half-it.firebaseapp.com",
@@ -274,21 +221,33 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
 
-    // --- Global variables ---
+    // Global variables to hold app state
     let players = [];
     let commands = [];
-    let gameHistory = [];
+    let gameStarted = false;
     let currentRound = 1;
-    let totalRounds = 10;
-    let startingScore = 0;
-    let currentChallengeIndex = 0;
+    let totalRounds = 5;
+    let currentChallengeIndex = -1;
     let currentPlayerIndex = 0;
     let hardcoreEnabled = true;
-    let hardcoreChallengeIndex = -1; // index of hardcore challenge in this game, -1 if none
-    let gameInProgress = false;
-    let undoStack = [];
+    let hardcoreChallengeIndex = null; // Which challenge is hardcore this game (once per 10 challenges, never last)
+    let startingScore = 0;
 
-    // --- Load players from Firestore ---
+    // History of turns, each turn: { round, challengeIndex, playerIndex, result, scoreAdded }
+    let history = [];
+
+    // =========== UTILITY FUNCTIONS ===========
+
+    // Save players to Firebase
+    function savePlayers() {
+      const batch = db.batch();
+      const playersRef = db.collection("players");
+      players.forEach(p => {
+        playersRef.doc(p.id).set({ name: p.name, score: p.score });
+      });
+    }
+
+    // Load players from Firebase
     async function loadPlayers() {
       players = [];
       const snapshot = await db.collection("players").get();
@@ -297,475 +256,427 @@
         players.push({ id: doc.id, name: data.name, score: data.score || 0 });
       });
       renderPlayers();
+      updateScoreboard();
     }
 
-    // --- Add player ---
-    async function addPlayer() {
-      const input = document.getElementById("newPlayerName");
-      const name = input.value.trim();
-      if (!name) return alert("Please enter a player name.");
-      // Add to Firestore
-      const docRef = await db.collection("players").add({ name: name, score: 0 });
-      players.push({ id: docRef.id, name: name, score: 0 });
-      input.value = "";
-      renderPlayers();
-    }
-
-    // --- Edit player name ---
-    async function editPlayer(id) {
-      const player = players.find(p => p.id === id);
-      if (!player) return;
-      const newName = prompt("Edit player name:", player.name);
-      if (newName !== null && newName.trim() !== "") {
-        await db.collection("players").doc(id).update({ name: newName.trim() });
-        player.name = newName.trim();
-        renderPlayers();
-      }
-    }
-
-    // --- Delete player ---
-    async function deletePlayer(id) {
-      if (!confirm("Delete this player?")) return;
-      await db.collection("players").doc(id).delete();
-      players = players.filter(p => p.id !== id);
-      renderPlayers();
-    }
-
-    // --- Render player list with edit/delete buttons ---
-    function renderPlayers() {
-      const container = document.getElementById("playersList");
-      container.innerHTML = "";
-      players.forEach((p, i) => {
-        const div = document.createElement("div");
-        div.className = i === currentPlayerIndex && gameInProgress ? "current-player" : "";
-        const span = document.createElement("span");
-        span.textContent = `${p.name} - ${p.score} pts`;
-        span.style.flexGrow = "1";
-        div.appendChild(span);
-
-        if (!gameInProgress) {
-          // Edit button
-          const editBtn = document.createElement("button");
-          editBtn.textContent = "Edit";
-          editBtn.className = "edit-btn";
-          editBtn.onclick = () => editPlayer(p.id);
-          div.appendChild(editBtn);
-
-          // Delete button
-          const delBtn = document.createElement("button");
-          delBtn.textContent = "Delete";
-          delBtn.className = "delete-btn";
-          delBtn.onclick = () => deletePlayer(p.id);
-          div.appendChild(delBtn);
-        }
-        container.appendChild(div);
-      });
-    }
-
-    // --- Load challenges from Firestore ---
+    // Save commands to Firebase
     async function loadCommands() {
       commands = [];
-      const snapshot = await db.collection("commands").get();
+      const snapshot = await db.collection("commands").orderBy("text").get();
       snapshot.forEach(doc => {
         const data = doc.data();
-        commands.push({ id: doc.id, text: data.text, description: data.description || "", hardcore: data.hardcore || false });
+        commands.push({ id: doc.id, text: data.text, description: data.description || "" });
       });
       renderCommands();
     }
 
-    // --- Add challenge ---
-    async function addCommand() {
-      const textInput = document.getElementById("newCommandText");
-      const descInput = document.getElementById("newCommandDesc");
-      const text = textInput.value.trim();
-      const desc = descInput.value.trim();
-      if (!text) return alert("Please enter a challenge text.");
-      const docRef = await db.collection("commands").add({ text, description: desc, hardcore: false });
-      commands.push({ id: docRef.id, text, description: desc, hardcore: false });
-      textInput.value = "";
-      descInput.value = "";
-      renderCommands();
-    }
-
-    // --- Render challenge list ---
-    function renderCommands() {
-      const container = document.getElementById("commandList");
-      container.innerHTML = "";
-      commands.forEach(c => {
-        const div = document.createElement("div");
-        div.style.marginBottom = "10px";
-
-        const textSpan = document.createElement("span");
-        textSpan.textContent = c.text;
-        if (c.hardcore) textSpan.className = "hardcore";
-        div.appendChild(textSpan);
-
-        if (c.description) {
-          const descSpan = document.createElement("div");
-          descSpan.style.fontStyle = "italic";
-          descSpan.style.fontSize = "0.85em";
-          descSpan.textContent = c.description;
-          div.appendChild(descSpan);
-        }
-
-        // Hardcore toggle for challenge
-        const hardcoreCheckbox = document.createElement("input");
-        hardcoreCheckbox.type = "checkbox";
-        hardcoreCheckbox.checked = c.hardcore;
-        hardcoreCheckbox.title = "Hardcore challenge";
-        hardcoreCheckbox.style.marginLeft = "10px";
-        hardcoreCheckbox.onchange = async () => {
-          await db.collection("commands").doc(c.id).update({ hardcore: hardcoreCheckbox.checked });
-          c.hardcore = hardcoreCheckbox.checked;
-          renderCommands();
-        };
-        div.appendChild(hardcoreCheckbox);
-
-        // Edit challenge text
-        const editBtn = document.createElement("button");
-        editBtn.textContent = "Edit";
-        editBtn.className = "edit-btn";
-        editBtn.onclick = () => editCommand(c.id);
-        div.appendChild(editBtn);
-
-        // Delete challenge
-        const delBtn = document.createElement("button");
-        delBtn.textContent = "Delete";
-        delBtn.className = "delete-btn";
-        delBtn.onclick = () => deleteCommand(c.id);
-        div.appendChild(delBtn);
-
-        container.appendChild(div);
-      });
-    }
-
-    // --- Edit challenge ---
-    async function editCommand(id) {
-      const command = commands.find(c => c.id === id);
-      if (!command) return;
-      const newText = prompt("Edit challenge text:", command.text);
-      if (newText !== null && newText.trim() !== "") {
-        const newDesc = prompt("Edit challenge description:", command.description);
-        await db.collection("commands").doc(id).update({ text: newText.trim(), description: newDesc || "" });
-        command.text = newText.trim();
-        command.description = newDesc || "";
-        renderCommands();
-      }
-    }
-
-    // --- Delete challenge ---
-    async function deleteCommand(id) {
-      if (!confirm("Delete this challenge?")) return;
-      await db.collection("commands").doc(id).delete();
-      commands = commands.filter(c => c.id !== id);
-      renderCommands();
-    }
-
-    // --- Toggle Challenge list visibility ---
-    document.getElementById("toggleCommandList").onclick = () => {
-      const cl = document.getElementById("commandList");
-      cl.style.display = cl.style.display === "none" ? "block" : "none";
-    };
-
-    // --- Toggle History visibility ---
-    document.getElementById("toggleHistory").onclick = () => {
-      const hl = document.getElementById("historyList");
-      hl.style.display = hl.style.display === "none" ? "block" : "none";
-    };
-
-    // --- Dark mode toggle ---
-    const darkModeToggle = document.getElementById("darkModeToggle");
-    darkModeToggle.onclick = () => {
-      document.body.classList.toggle("dark");
-    };
-
-    // --- Start Game ---
-    document.getElementById("startGameBtn").onclick = async () => {
-      if (players.length < 1) return alert("Add at least one player.");
-      if (commands.length < 1) return alert("Add at least one challenge.");
-
-      totalRounds = parseInt(document.getElementById("roundCountInput").value) || 10;
-      startingScore = parseInt(document.getElementById("startingScoreInput").value) || 0;
-      hardcoreEnabled = document.getElementById("enableHardcore").checked;
-
-      // Reset all players' scores and update in firestore
-      for (const player of players) {
-        player.score = startingScore;
-        await db.collection("players").doc(player.id).update({ score: startingScore });
-      }
-      renderPlayers();
-
-      // Reset game state
-      currentRound = 1;
-      currentPlayerIndex = 0;
-      gameInProgress = true;
-      undoStack = [];
-      gameHistory = [];
-
-      // Clear history in firestore (optional: could keep previous games if you want)
-      // Here we delete all docs in gameHistory collection:
-      await clearFirestoreCollection("gameHistory");
-
-      // Determine hardcore challenge index if enabled
-      if (hardcoreEnabled) {
-        const hardcoreChallenges = commands.filter(c => c.hardcore);
-        if (hardcoreChallenges.length > 0) {
-          // Choose random hardcore challenge index but not for last round and not round 10 multiples
-          // We'll assign it once randomly for the game
-          const hardcoreCandidates = [];
-          for (let i = 0; i < commands.length; i++) {
-            if (commands[i].hardcore) hardcoreCandidates.push(i);
-          }
-          hardcoreChallengeIndex = hardcoreCandidates.length > 0
-            ? hardcoreCandidates[Math.floor(Math.random() * hardcoreCandidates.length)]
-            : -1;
-        } else {
-          hardcoreChallengeIndex = -1;
-        }
-      } else {
-        hardcoreChallengeIndex = -1;
-      }
-
-      updateUIForNewTurn();
-      document.getElementById("gameArea").classList.remove("hidden");
-      document.getElementById("startGameBtn").classList.add("hidden");
-    };
-
-    // --- Clear Firestore collection helper ---
-    async function clearFirestoreCollection(collectionName) {
-      const snapshot = await db.collection(collectionName).get();
+    // Save history to Firebase
+    async function saveHistory() {
       const batch = db.batch();
-      snapshot.forEach(doc => batch.delete(doc.ref));
+      const historyRef = db.collection("history");
+      // Clear existing history
+      const oldHistory = await historyRef.get();
+      oldHistory.forEach(doc => batch.delete(doc.ref));
+      // Add new history
+      history.forEach((h, idx) => {
+        batch.set(historyRef.doc(idx.toString()), h);
+      });
       await batch.commit();
     }
 
-    // --- Update UI for current turn ---
-    function updateUIForNewTurn() {
-      if (!gameInProgress) return;
-      if (currentRound > totalRounds) {
-        endGame();
+    // Load history from Firebase
+    async function loadHistory() {
+      history = [];
+      const snapshot = await db.collection("history").orderBy("__name__").get();
+      snapshot.forEach(doc => {
+        history.push(doc.data());
+      });
+      renderHistory();
+    }
+
+    // =========== RENDERING FUNCTIONS ===========
+
+    // Render the list of players with edit/delete buttons
+    function renderPlayers() {
+      const container = document.getElementById("playerButtons");
+      container.innerHTML = "";
+      players.forEach((p, i) => {
+        const btn = document.createElement("button");
+        btn.textContent = p.name;
+        btn.className = "player-btn";
+        if (i === currentPlayerIndex && gameStarted) btn.classList.add("selected");
+        btn.onclick = () => {
+          if (!gameStarted) {
+            const newName = prompt("Edit player name:", p.name);
+            if (newName && newName.trim()) {
+              p.name = newName.trim();
+              savePlayers();
+              renderPlayers();
+            }
+          }
+        };
+
+        // Delete button
+        if (!gameStarted) {
+          const delBtn = document.createElement("button");
+          delBtn.textContent = "X";
+          delBtn.className = "delete-btn";
+          delBtn.onclick = e => {
+            e.stopPropagation();
+            if (confirm(`Delete player "${p.name}"?`)) {
+              players.splice(i, 1);
+              savePlayers();
+              renderPlayers();
+            }
+          };
+          btn.appendChild(delBtn);
+        }
+        container.appendChild(btn);
+      });
+    }
+
+    // Render the commands list with edit/delete buttons
+    function renderCommands() {
+      const container = document.getElementById("commandList");
+      container.innerHTML = "";
+      commands.forEach((cmd, i) => {
+        const div = document.createElement("div");
+        div.style.marginBottom = "10px";
+
+        // Highlight current challenge
+        if (gameStarted && i === currentChallengeIndex) {
+          div.className = "commandBox";
+          if (i === hardcoreChallengeIndex) div.classList.add("hardcore");
+          div.textContent = cmd.text;
+          const desc = document.getElementById("currentDescription");
+          desc.textContent = cmd.description || "";
+        } else {
+          // Editable command line
+          div.innerHTML = `<strong>${cmd.text}</strong><br/><em>${cmd.description}</em>`;
+          const editBtn = document.createElement("button");
+          editBtn.textContent = "Edit";
+          editBtn.className = "edit-btn";
+          editBtn.onclick = () => {
+            const newText = prompt("Edit challenge text:", cmd.text);
+            const newDesc = prompt("Edit description:", cmd.description || "");
+            if (newText !== null && newText.trim() !== "") {
+              db.collection("commands").doc(cmd.id).set({ text: newText.trim(), description: newDesc || "" }).then(loadCommands);
+            }
+          };
+
+          const deleteBtn = document.createElement("button");
+          deleteBtn.textContent = "Delete";
+          deleteBtn.className = "delete-btn";
+          deleteBtn.onclick = () => {
+            if (confirm("Delete this challenge?")) {
+              db.collection("commands").doc(cmd.id).delete().then(loadCommands);
+            }
+          };
+          div.appendChild(editBtn);
+          div.appendChild(deleteBtn);
+        }
+        container.appendChild(div);
+      });
+    }
+
+    // Update scoreboard UI
+    function updateScoreboard() {
+      const ul = document.getElementById("scoreList");
+      ul.innerHTML = "";
+      players.forEach((p, i) => {
+        const li = document.createElement("li");
+        li.textContent = `${p.name}: ${p.score}`;
+        if (gameStarted && i === currentPlayerIndex) {
+          li.classList.add("current-turn");
+          li.textContent += " ← Current turn";
+        }
+        ul.appendChild(li);
+      });
+    }
+
+    // Render history entries
+    function renderHistory() {
+      const container = document.getElementById("historyList");
+      container.innerHTML = "";
+      if (history.length === 0) {
+        container.innerHTML = "<li>No history yet.</li>";
         return;
       }
-      currentPlayerIndex = (currentPlayerIndex >= players.length) ? 0 : currentPlayerIndex;
-      // Choose challenge index
-      if (hardcoreEnabled && currentRound % 10 === 0 && hardcoreChallengeIndex !== -1 && currentRound !== totalRounds) {
-        // Use hardcore challenge for every 10th round except last round
-        currentChallengeIndex = hardcoreChallengeIndex;
+      history.forEach(entry => {
+        const li = document.createElement("li");
+        const playerName = players[entry.playerIndex]?.name || "(unknown)";
+        const challengeText = commands[entry.challengeIndex]?.text || "(unknown challenge)";
+        let resultText = "";
+        if (entry.result === "success") {
+          resultText = `+${entry.scoreAdded}`;
+        } else if (entry.result === "fail") {
+          if (entry.scoreAdded === 0) resultText = "Score reset to 0";
+          else resultText = `Score halved (-${entry.scoreAdded} deducted)`;
+        } else if (entry.result === "undo") {
+          resultText = "(Undo last action)";
+        }
+        li.textContent = `Round ${entry.round}, Player: ${playerName}, Challenge: "${challengeText}" — ${entry.result.toUpperCase()} ${resultText}`;
+        container.appendChild(li);
+      });
+    }
+
+    // =========== PLAYER & COMMAND MANAGEMENT ===========
+
+    function addPlayer() {
+      const nameInput = document.getElementById("newPlayerName");
+      const name = nameInput.value.trim();
+      if (!name) return alert("Player name cannot be empty.");
+      // Check duplicates
+      if (players.some(p => p.name.toLowerCase() === name.toLowerCase())) {
+        return alert("Player with this name already exists.");
+      }
+      // Add to Firebase
+      db.collection("players").add({ name, score: startingScore }).then(docRef => {
+        players.push({ id: docRef.id, name, score: startingScore });
+        renderPlayers();
+        updateScoreboard();
+        nameInput.value = "";
+      });
+    }
+
+    function addCommand() {
+      const text = document.getElementById("newCommandText").value.trim();
+      const description = document.getElementById("newCommandDesc").value.trim();
+      if (!text) return alert("Challenge text cannot be empty.");
+      db.collection("commands").add({ text, description }).then(() => {
+        document.getElementById("newCommandText").value = "";
+        document.getElementById("newCommandDesc").value = "";
+        loadCommands();
+      });
+    }
+
+    // =========== GAME LOGIC ===========
+
+    function startGame() {
+      if (players.length < 1) {
+        return alert("Add at least one player to start the game.");
+      }
+      if (commands.length < 1) {
+        return alert("Add at least one challenge to start the game.");
+      }
+      // Reset scores and state
+      startingScore = parseInt(document.getElementById("startingScore").value) || 0;
+      totalRounds = parseInt(document.getElementById("roundSelector").value) || 5;
+      hardcoreEnabled = document.getElementById("hardcoreToggle").checked;
+
+      players.forEach(p => p.score = startingScore);
+      currentRound = 1;
+      currentPlayerIndex = 0;
+      currentChallengeIndex = 0;
+      history = [];
+
+      // Choose a hardcore challenge if enabled (random, but never last)
+      if (hardcoreEnabled && commands.length > 1) {
+        hardcoreChallengeIndex = Math.floor(Math.random() * (commands.length - 1));
       } else {
-        // Normal random challenge index
-        currentChallengeIndex = Math.floor(Math.random() * commands.length);
+        hardcoreChallengeIndex = null;
       }
-      renderCurrentChallenge();
+
+      gameStarted = true;
       renderPlayers();
-      updateCurrentPlayerTurn();
-      renderGameHistory();
+      updateScoreboard();
+      renderCommands();
+      renderHistory();
+      showGameArea(true);
+
+      updateCurrentChallengeDisplay();
+      updatePlayerTurnDisplay();
       document.getElementById("scoreInput").value = "";
-      document.getElementById("failBtn").disabled = false;
-      document.getElementById("submitScoreBtn").disabled = false;
-      document.getElementById("undoBtn").disabled = undoStack.length === 0;
-      document.getElementById("nextRoundBtn").classList.add("hidden");
     }
 
-    // --- Render current challenge ---
-    function renderCurrentChallenge() {
+    // Show or hide the game UI area
+    function showGameArea(show) {
+      document.getElementById("gameArea").classList.toggle("hidden", !show);
+      document.getElementById("historyArea").classList.toggle("hidden", !show);
+    }
+
+    // Update challenge display box
+    function updateCurrentChallengeDisplay() {
       const challenge = commands[currentChallengeIndex];
-      const challengeBox = document.getElementById("currentChallenge");
-      challengeBox.textContent = challenge.text + (challenge.hardcore ? " [Hardcore]" : "");
-      const descBox = document.getElementById("challengeDescription");
-      descBox.textContent = challenge.description || "";
+      if (!challenge) {
+        document.getElementById("currentChallenge").textContent = "No challenge selected.";
+        document.getElementById("currentDescription").textContent = "";
+        return;
+      }
+      const cb = document.getElementById("currentChallenge");
+      cb.textContent = challenge.text;
+      if (currentChallengeIndex === hardcoreChallengeIndex) {
+        cb.classList.add("hardcore");
+      } else {
+        cb.classList.remove("hardcore");
+      }
+      document.getElementById("currentDescription").textContent = challenge.description || "";
     }
 
-    // --- Update current player turn display ---
-    function updateCurrentPlayerTurn() {
+    // Update player turn display
+    function updatePlayerTurnDisplay() {
       const player = players[currentPlayerIndex];
-      document.getElementById("currentPlayerTurn").textContent = `Round ${currentRound} - ${player.name}'s turn`;
+      document.getElementById("playerTurnInfo").textContent = `Round ${currentRound} - Player: ${player.name}'s turn`;
+      renderPlayers();
+      updateScoreboard();
     }
 
-    // --- Submit score ---
-    document.getElementById("submitScoreBtn").onclick = async () => {
-      const input = document.getElementById("scoreInput");
-      const val = parseInt(input.value);
-      if (isNaN(val) || val < 0) return alert("Enter a valid score.");
-      await recordScore(val);
-      input.value = "";
-      prepareNextTurn();
-    };
-
-    // --- Fail challenge ---
-    document.getElementById("failBtn").onclick = async () => {
-      await recordFail();
-      prepareNextTurn();
-    };
-
-    // --- Undo last action ---
-    document.getElementById("undoBtn").onclick = async () => {
-      if (undoStack.length === 0) return alert("Nothing to undo.");
-      const lastAction = undoStack.pop();
-
-      // Revert player score
-      const player = players.find(p => p.id === lastAction.playerId);
-      if (player) {
-        player.score = lastAction.previousScore;
-        await db.collection("players").doc(player.id).update({ score: player.score });
+    // Submit score (success scenario)
+    function submitScore() {
+      if (!gameStarted) return alert("Start the game first.");
+      const scoreInput = document.getElementById("scoreInput");
+      let addedScore = parseInt(scoreInput.value);
+      if (isNaN(addedScore) || addedScore < 0) {
+        return alert("Enter a valid positive score.");
       }
 
-      // Remove last history entry in firestore
-      if (lastAction.historyDocId) {
-        await db.collection("gameHistory").doc(lastAction.historyDocId).delete();
+      // Update player score
+      players[currentPlayerIndex].score += addedScore;
+
+      // Add history entry
+      history.push({
+        round: currentRound,
+        challengeIndex: currentChallengeIndex,
+        playerIndex: currentPlayerIndex,
+        result: "success",
+        scoreAdded: addedScore
+      });
+
+      nextTurn();
+      saveState();
+    }
+
+    // Fail challenge logic: half or reset for hardcore
+    function failChallenge() {
+      if (!gameStarted) return alert("Start the game first.");
+
+      const player = players[currentPlayerIndex];
+      const isHardcore = currentChallengeIndex === hardcoreChallengeIndex;
+      let oldScore = player.score;
+
+      if (isHardcore) {
+        player.score = 0;
+      } else {
+        player.score = Math.floor(player.score / 2);
       }
 
-      // Remove from local gameHistory array
-      gameHistory.pop();
+      const scoreDeducted = oldScore - player.score;
+
+      history.push({
+        round: currentRound,
+        challengeIndex: currentChallengeIndex,
+        playerIndex: currentPlayerIndex,
+        result: "fail",
+        scoreAdded: scoreDeducted
+      });
+
+      nextTurn();
+      saveState();
+    }
+
+    // Undo last turn
+    function undoLast() {
+      if (history.length === 0) return alert("No moves to undo.");
+
+      const lastEntry = history.pop();
+      // Undo effect on player score
+      const player = players[lastEntry.playerIndex];
+
+      if (lastEntry.result === "success") {
+        player.score -= lastEntry.scoreAdded;
+      } else if (lastEntry.result === "fail") {
+        // Undo fail:
+        if (lastEntry.scoreAdded === player.score) {
+          // It was a hardcore fail reset to zero, revert to old score
+          player.score = lastEntry.scoreAdded * 2; // approximate revert (best effort)
+        } else {
+          // Fail halve undo: revert score back
+          player.score = player.score * 2 + (player.score % 2 ? 1 : 0);
+        }
+      }
+
+      // Roll back turn indexes accordingly:
+      // We step back one player and adjust rounds/challenges if needed.
+
+      if (currentPlayerIndex === 0) {
+        if (currentRound > 1) {
+          currentRound--;
+          currentChallengeIndex = (currentChallengeIndex - 1 + commands.length) % commands.length;
+          currentPlayerIndex = players.length - 1;
+        }
+      } else {
+        currentPlayerIndex--;
+      }
 
       renderPlayers();
-      renderGameHistory();
-      document.getElementById("undoBtn").disabled = undoStack.length === 0;
-    };
+      updateScoreboard();
+      updateCurrentChallengeDisplay();
+      updatePlayerTurnDisplay();
+      renderHistory();
 
-    // --- Prepare next turn ---
-    function prepareNextTurn() {
+      saveState();
+    }
+
+    // Advances turn to next player, possibly next round and challenge
+    function nextTurn() {
       currentPlayerIndex++;
       if (currentPlayerIndex >= players.length) {
         currentPlayerIndex = 0;
         currentRound++;
+        currentChallengeIndex++;
+        if (currentChallengeIndex >= commands.length) {
+          currentChallengeIndex = 0;
+        }
       }
+
       if (currentRound > totalRounds) {
-        endGame();
+        alert("Game over!");
+        gameStarted = false;
+        showGameArea(false);
         return;
       }
-      updateUIForNewTurn();
+
+      updateCurrentChallengeDisplay();
+      updatePlayerTurnDisplay();
+      renderHistory();
     }
 
-    // --- Record score action ---
-    async function recordScore(score) {
-      const player = players[currentPlayerIndex];
-      const prevScore = player.score;
-      player.score += score;
-      await db.collection("players").doc(player.id).update({ score: player.score });
-
-      // Add history record to Firestore
-      const historyDoc = await db.collection("gameHistory").add({
-        round: currentRound,
-        playerId: player.id,
-        playerName: player.name,
-        challengeText: commands[currentChallengeIndex].text,
-        scoreChange: score,
-        newScore: player.score,
-        failed: false,
-        hardcoreFail: false,
-        timestamp: new Date()
-      });
-
-      // Save to local gameHistory array for UI
-      gameHistory.push({
-        id: historyDoc.id,
-        round: currentRound,
-        playerId: player.id,
-        playerName: player.name,
-        challengeText: commands[currentChallengeIndex].text,
-        scoreChange: score,
-        newScore: player.score,
-        failed: false,
-        hardcoreFail: false,
-        timestamp: new Date()
-      });
-
-      undoStack.push({
-        playerId: player.id,
-        previousScore: prevScore,
-        historyDocId: historyDoc.id
-      });
-      document.getElementById("undoBtn").disabled = false;
-      renderPlayers();
-      renderGameHistory();
+    // Save all current state to Firebase collections
+    async function saveState() {
+      await savePlayers();
+      await saveHistory();
+      // Commands do not change during game so no need to save.
     }
 
-    // --- Record fail action ---
-    async function recordFail() {
-      const player = players[currentPlayerIndex];
-      const prevScore = player.score;
-      const challenge = commands[currentChallengeIndex];
-      const isHardcoreChallenge = challenge.hardcore;
-      const hardcoreFail = hardcoreEnabled && isHardcoreChallenge;
+    // Initialize UI and event handlers on page load
+    async function init() {
+      // Load all data
+      await loadPlayers();
+      await loadCommands();
+      await loadHistory();
 
-      if (hardcoreFail) {
-        // Hardcore fail resets to zero
-        player.score = 0;
-      } else {
-        // Normal fail halves the score (round up)
-        player.score = Math.ceil(player.score / 2);
-      }
+      // Wire toggle buttons
+      document.getElementById("toggleCommandList").onclick = () => {
+        const cl = document.getElementById("commandList");
+        cl.style.display = cl.style.display === "none" ? "block" : "none";
+      };
 
-      await db.collection("players").doc(player.id).update({ score: player.score });
+      document.getElementById("darkModeToggle").onclick = () => {
+        document.body.classList.toggle("dark-mode");
+      };
 
-      // Add history record to Firestore
-      const historyDoc = await db.collection("gameHistory").add({
-        round: currentRound,
-        playerId: player.id,
-        playerName: player.name,
-        challengeText: challenge.text,
-        scoreChange: player.score - prevScore,
-        newScore: player.score,
-        failed: true,
-        hardcoreFail: hardcoreFail,
-        timestamp: new Date()
-      });
+      // Add a Start Game button dynamically:
+      const startBtn = document.createElement("button");
+      startBtn.textContent = "Start Game";
+      startBtn.style.marginTop = "15px";
+      startBtn.onclick = startGame;
+      document.getElementById("playerSection").appendChild(startBtn);
 
-      // Save to local gameHistory array for UI
-      gameHistory.push({
-        id: historyDoc.id,
-        round: currentRound,
-        playerId: player.id,
-        playerName: player.name,
-        challengeText: challenge.text,
-        scoreChange: player.score - prevScore,
-        newScore: player.score,
-        failed: true,
-        hardcoreFail: hardcoreFail,
-        timestamp: new Date()
-      });
-
-      undoStack.push({
-        playerId: player.id,
-        previousScore: prevScore,
-        historyDocId: historyDoc.id
-      });
-      document.getElementById("undoBtn").disabled = false;
-      renderPlayers();
-      renderGameHistory();
+      // Show command list by default
+      document.getElementById("commandList").style.display = "block";
     }
 
-    // --- Render game history list ---
-    function renderGameHistory() {
-      const list = document.getElementById("historyList");
-      list.innerHTML = "";
-      gameHistory.forEach(entry => {
-        const li = document.createElement("li");
-        li.style.padding = "5px 0";
-        li.style.borderBottom = "1px solid #ccc";
-        li.style.color = entry.failed ? "red" : "green";
-        if (document.body.classList.contains("dark")) li.style.borderBottom = "1px solid #555";
-        li.textContent = `Round ${entry.round} - ${entry.playerName} did "${entry.challengeText}" and ` +
-          (entry.failed
-            ? (entry.hardcoreFail ? "HARDCORE FAILED! Score reset to 0." : `FAILED. New score: ${entry.newScore}`)
-            : `scored +${entry.scoreChange}. Total score: ${entry.newScore}`);
-        list.appendChild(li);
-      });
-    }
-
-    // --- End game ---
-    function endGame() {
-      alert("Game Over!");
-      gameInProgress = false;
-      document.getElementById("gameArea").classList.add("hidden");
-      document.getElementById("startGameBtn").classList.remove("hidden");
-      document.getElementById("nextRoundBtn").classList.add("hidden");
-    }
-
-    // --- Initialization ---
-    loadPlayers();
-    loadCommands();
-    loadGameHistory();
+    window.onload = init;
 
   </script>
 </body>
