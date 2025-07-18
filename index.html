@@ -216,6 +216,7 @@
   <section id="scoreboard">
     <h3>Scoreboard</h3>
     <ul id="scoreList"></ul>
+	 <button id="endGameBtn" class="end-game-btn" style="margin-top: 10px;">End Game</button>
   </section>
 
   <!-- History -->
@@ -613,11 +614,25 @@
   toggleCommandListBtn.addEventListener("click", () => {
     commandListDiv.style.display = commandListDiv.style.display === "none" ? "block" : "none";
   });
+  
+const endGameBtn = document.getElementById("endGameBtn");
+
+function endGameEarly() {
+  if (!gameStarted) {
+    alert("No game is currently running.");
+    return;
+  }
+  endGame();
+}
+
+endGameBtn.addEventListener("click", endGameEarly);
+
 
   // Initial load from Firebase
   loadPlayersFromFirebase();
   loadCommandsFromFirebase();
   loadHistoryFromFirebase();
+  
 
 </script>
 </body>
