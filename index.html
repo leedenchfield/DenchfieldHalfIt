@@ -21,127 +21,156 @@
     input, button, select, textarea {
       font-size: 1em;
       padding: 8px;
-      margin:  5px 0;
+      margin: 5px 0;
       width: 100%;
-      background-color: white;
-      color: black;
+      box-sizing: border-box;
     }
-    body.dark-mode input,
-    body.dark-mode textarea,
-    body.dark-mode select {
-      background-color: #222;
-      color: white;
-      border: 1px solid #555;
-    }
-    #commandList, #gameArea, #historyArea, #playerButtons {
+    #playerButtons, #commandList, #scoreboard, #historyArea {
       margin-top: 20px;
-    }
-    .hidden {
-      display: none;
-    }
-    .commandBox {
-      font-size: 2em;
-      margin: 15px 0;
       padding: 10px;
-      background: #f0f0f0;
-      border-radius: 5px;
-      font-weight: bold;
-    }
-    .descriptionBox {
-      font-size: 0.9em;
-      margin: 10px 0;
-      font-style: italic;
-    }
-    .score {
-      font-size: 1.4em;
-      margin: 10px 0;
-    }
-    #scoreboard {
-      background: #eef;
-      padding: 10px;
-      margin-top: 10px;
       border-radius: 5px;
     }
-    #scoreboard ul {
-      padding-left: 20px;
-    }
-    .player-btn {
-      margin: 5px;
-      padding: 5px 10px;
-      cursor: pointer;
-      background-color: #ccc;
+    #playerButtons button {
+      margin: 5px 5px 5px 0;
+      padding: 8px 12px;
       border: none;
       border-radius: 4px;
-      transition: 0.3s ease;
+      cursor: pointer;
+      background-color: #ccc;
+      transition: background-color 0.3s;
     }
-    .player-btn.selected {
+    #playerButtons button.selected {
       background-color: #0044cc;
       color: white;
       font-weight: bold;
       box-shadow: 0 0 5px #0044cc;
     }
-    .hardcore {
-      color: red;
-      font-weight: bold;
+    #playerButtons button.current-turn {
+      border: 2px solid #ff9800;
     }
-    .edit-btn, .delete-btn {
-      float: right;
-      font-size: 0.8em;
-      padding: 2px 6px;
-      margin-left: 5px;
-      border: none;
-      border-radius: 3px;
-      cursor: pointer;
+    #commandList {
+      background: #f0f0f0;
+      max-height: 200px;
+      overflow-y: auto;
     }
-    .edit-btn {
-      background-color: #faa;
+    .commandItem {
+      padding: 5px;
+      border-bottom: 1px solid #ccc;
+      position: relative;
     }
-    .delete-btn {
-      background-color: #fcc;
+    .commandItem:last-child {
+      border-bottom: none;
     }
-    #toggleCommandList {
+.commandItem {
+  padding-right: 90px; /* space for buttons */
+  position: relative;
+  margin-bottom: 10px;
+  background: #f0f0f0;
+  border-radius: 5px;
+  padding: 10px;
+}
+
+.commandItem::after {
+  content: "";
+  display: table;
+  clear: both;
+}
+
+.commandItem .edit-btn, .commandItem .delete-btn {
+  float: right;
+  font-size: 0.8em;
+  padding: 2px 6px;
+  margin-left: 5px;
+  border: none;
+  border-radius: 3px;
+  cursor: pointer;
+  position: relative;
+  z-index: 1;
+}
+
+.commandItem .edit-btn {
+  background-color: #faa;
+}
+
+.commandItem .delete-btn {
+  background-color: #fcc;
+}
+
+    #scoreboard {
+      background: #eef;
+    }
+    #scoreboard ul {
+      list-style: none;
+      padding-left: 0;
+    }
+    #scoreboard li {
+      margin-bottom: 5px;
+    }
+    #historyArea {
+      background: #efe;
+      max-height: 200px;
+      overflow-y: auto;
+    }
+    #historyArea ul {
+      list-style: none;
+      padding-left: 0;
+      margin: 0;
+    }
+    #historyArea li {
+      margin-bottom: 5px;
+      font-size: 0.9em;
+    }
+    .fail-btn, .undo-btn, #submitScoreBtn, #startGameBtn {
+      padding: 10px 20px;
       margin-top: 10px;
       cursor: pointer;
-      background: #ddd;
       border: none;
-      padding: 5px 10px;
       border-radius: 5px;
+      font-weight: bold;
+      font-size: 1em;
     }
-    #darkModeToggle {
+    .fail-btn {
+      background-color: #e53935;
+      color: white;
+      margin-right: 10px;
+    }
+    .undo-btn {
+      background-color: #ff9800;
+      color: white;
+      margin-left: 10px;
+    }
+    #submitScoreBtn {
+      background-color: #4caf50;
+      color: white;
+      margin-top: 0;
+    }
+    #darkModeToggle, #toggleCommandList {
       margin: 10px 0;
-      padding: 5px 10px;
+      padding: 8px 15px;
       background-color: #444;
       color: white;
       border: none;
       border-radius: 5px;
       cursor: pointer;
+      font-weight: bold;
+      width: auto;
     }
-    .action-buttons {
-      display: flex;
-      justify-content: space-between;
-      gap: 10px;
-      margin-top: 10px;
-    }
-    .action-buttons button {
-      flex: 1;
-    }
-    #challengeDisplay {
+    #gameArea {
       margin-top: 20px;
       padding: 10px;
-      background-color: #e8f5e9;
-      border: 1px solid #ccc;
+      border: 2px solid #0044cc;
       border-radius: 5px;
+      background-color: #dbe9ff;
     }
-    #challengeDisplay h2 {
-      font-size: 1.5em;
-    }
-    #challengeDisplay p {
-      font-style: italic;
-    }
-    #turnDisplay {
+    #currentTurnInfo {
       font-weight: bold;
       font-size: 1.2em;
-      margin-top: 10px;
+      margin-bottom: 10px;
+    }
+    #currentChallengeText {
+      font-size: 1.4em;
+      margin-bottom: 10px;
+      font-style: italic;
     }
   </style>
 
