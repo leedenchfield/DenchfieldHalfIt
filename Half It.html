@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Darts Challenge App</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; max-width: 600px; margin: auto; }
+    input, button, select, textarea { font-size: 1em; padding: 8px; margin: 5px 0; width: 100%; }
+    #commandList, #gameArea, #historyArea { margin-top: 20px; }
+    .hidden { display: none; }
+    .commandBox { font-size: 1.2em; margin: 15px 0; padding: 10px; background: #f0f0f0; border-radius: 5px; }
+    .score { font-size: 1.4em; margin: 10px 0; }
+    #scoreboard { background: #eef; padding: 10px; margin-top: 10px; border-radius: 5px; }
+    #scoreboard ul { padding-left: 20px; }
+  </style>
+
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+  <script>
+    // TODO: Replace this config with your Firebase project settings
+    const firebaseConfig = {
+	  apiKey: "AIzaSyAusKA2YiJTelSm54EJfRbVJMk0M6mh_WM",
+	  authDomain: "denchfield-half-it.firebaseapp.com",
+	  projectId: "denchfield-half-it",
+	  storageBucket: "denchfield-half-it.firebasestorage.app",
+	  messagingSenderId: "494344468882",
+	  appId: "1:494344468882:web:7a1f0d2ac938627206e94b",
+	  measurementId: "G-ZQQM5PNWPV"
+};
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+  </script>
+</head>
+<body>
+  <h2>Darts Challenge App</h2>
+
+  <div id="commandInput">
+    <textarea id="newCommand" placeholder="Enter a new command"></textarea>
+    <button onclick="addCommand()">Add Command</button>
+    <ul id="commandList"></ul>
+    <button onclick="clearCommands()">Clear All Commands</button>
+  </div>
+
+  <hr />
+
+  <div id="setupGame">
+    <label for="players">Enter player names (comma separated):</label>
+    <input type="text" id="players" placeholder="e.g. Alice, Bob" />
+
+    <label for="numCommands">Number of commands to play:</label>
+    <input type="number" id="numCommands" min="1" />
+
+    <button onclick="startGame()">Start Game</button>
+  </div>
+
+  <div id="gameArea" class="hidden">
+    <div class="commandBox" id="currentCommand"></div>
+    <div class="score">Player: <span id="currentPlayer"></span></div>
+    <input type="number" id="scoreInput" placeholder="Enter score achieved" />
+    <button onclick="submitScore()">Submit Score</button>
+    <button onclick="failCommand()">Fail</button>
+    <div class="score">Current Score: <span id="currentScore"></span></div>
+    <div class="score">Round <span id="roundNum"></span> of <span id="totalRounds"></span></div>
+    <div id="scoreboard">
+      <strong>Scoreboard:</strong>
+      <ul id="scoreboardList"></ul>
+    </div>
+  </div>
+
+  <div id="historyArea">
+    <h3>Game History</h3>
+    <ul id="historyList"></ul>
+    <button onclick="clearHistory()">Clear History</button>
+  </div>
+
+<script>
+  let allCommands = [];
+  let commandPool = [];
+  let totalRounds = 0;
+  let currentRound = 0;
+  let players = [];
+  let scores = {};
+  let currentPlayerIndex = 0;
+
+  // -------- Firestore functions ---------
+
+  async function loadCommands() {
+    try {
+      const doc = await db.collection('settings').doc('commands').get();
+      if (doc.exists) {
+        allCommands = doc.data().list || [];
+      } else {
+        allCommands = [];
+      }
+      updateCommandList(false); // false = don't save back after loading
+    } catch (e) {
+      console.error("Error loading commands:", e);
+      allCommands = [];
+      updateCommandList(false);
+    }
+  }
+
+  async function saveCommands() {
+    try {
+      await db.collection('settings').doc('commands').set({ list: allCommands });
+    } catch (e) {
+      console.error("Error saving commands:", e);
+    }
+  }
+
+  async function loadPlayers() {
+    try {
+      const doc = await db.collection('settings').doc('players').get();
+      if (doc.exists) {
+        savedPlayers = doc.data().list || [];
+        // Optional: Populate players input field with saved players (comma separated)
+        if(savedPlayers.length > 0) {
+          document.getElementById('players').value = savedPlayers.join(', ');
+        }
+      }
+    } catch (e) {
+      console.error("Error loading players:", e);
+    }
+  }
+
+  async function savePlayers(playersList) {
+    try {
+      await db.collection('settings').doc('players').set({ list: playersList });
+    } catch (e) {
+      console.error("Error saving players:", e);
+    }
+  }
+
+  async function saveHistory(scoreObj) {
+    try {
+      await db.collection('history').add({
+        date: new Date().toISOString(),
+        scores: scoreObj
+      });
+      displayHistory();
+    } catch (e) {
+      console.error("Error saving history:", e);
+    }
+  }
+
+  async function displayHistory() {
+    try {
+      const snapshot = await db.collection('history').orderBy('date', 'desc').limit(20).get();
+      const list = document.getElementById('historyList');
+      list.innerHTML = '';
+      snapshot.forEach(doc => {
+        const entry = doc.data();
+        const scoreText = Object.entries(entry.scores).map(([p, s]) => `${p}: ${s} pts`).join(', ');
+        const li = document.createElement('li');
+        const dateFormatted = new Date(entry.date).toLocaleString();
+        li.textContent = `${dateFormatted}: ${scoreText}`;
+        list.appendChild(li);
+      });
+    } catch (e) {
+      console.error("Error loading history:", e);
+    }
+  }
+
+  async function clearHistory() {
+    if (!confirm("Clear all score history? This cannot be undone.")) return;
+    try {
+      const snapshot = await db.collection('history').get();
+      const batch = db.batch();
+      snapshot.forEach(doc => batch.delete(doc.ref));
+      await batch.commit();
+      displayHistory();
+    } catch (e) {
+      console.error("Error clearing history:", e);
+    }
+  }
+
+  // --------- App logic -----------
+
+  async function updateCommandList(save = true) {
+    const list = document.getElementById('commandList');
+    list.innerHTML = '';
+    allCommands.forEach((cmd) => {
+      const li = document.createElement('li');
+      li.textContent = cmd;
+      list.appendChild(li);
+    });
+    if(save) await saveCommands();
+  }
+
+  function addCommand() {
+    const input = document.getElementById('newCommand');
+    const value = input.value.trim();
+    if (value) {
+      allCommands.push(value);
+      input.value = '';
+      updateCommandList();
+    }
+  }
+
+  function clearCommands() {
+    if (confirm("Clear all commands?")) {
+      allCommands = [];
+      updateCommandList();
+    }
+  }
+
+  async function startGame() {
+    const num = parseInt(document.getElementById('numCommands').value);
+    const playerInput = document.getElementById('players').value;
+    players = playerInput.split(',').map(p => p.trim()).filter(p => p);
+
+    if (players.length === 0) {
+      alert("Enter at least one player name.");
+      return;
+    }
+
+    if (isNaN(num) || num < 1 || num > allCommands.length) {
+      alert("Enter a valid number of commands (1 to " + allCommands.length + ")");
+      return;
+    }
+
+    scores = {};
+    players.forEach(player => scores[player] = 0);
+
+    // Save players list to Firestore
+    await savePlayers(players);
+
+    commandPool = [...allCommands];
+    shuffleArray(commandPool);
+    commandPool = commandPool.slice(0, num);
+
+    currentRound = 0;
+    totalRounds = num;
+    currentPlayerIndex = 0;
+
+    document.getElementById('gameArea').classList.remove('hidden');
+    document.getElementById('setupGame').classList.add('hidden');
+
+    nextCommand();
+  }
+
+  function nextCommand() {
+    if (currentRound >= totalRounds && currentPlayerIndex === 0) {
+      endGame();
+      return;
+    }
+
+    const player = players[currentPlayerIndex];
+    const command = commandPool[currentRound];
+
+    document.getElementById('currentPlayer').textContent = player;
+    document.getElementById('currentCommand').textContent = command;
+    document.getElementById('scoreInput').value = '';
+    document.getElementById('currentScore').textContent = scores[player];
+    document.getElementById('roundNum').textContent = currentRound + 1;
+    document.getElementById('totalRounds').textContent = totalRounds;
+    updateScoreboard();
+  }
+
+  function submitScore() {
+    const input = parseInt(document.getElementById('scoreInput').value);
+    if (isNaN(input) || input < 0) {
+      alert("Enter a valid score");
+      return;
+    }
+    if (input === 0) {
+      failCommand();
+      return;
+    }
+
+    const player = players[currentPlayerIndex];
+    scores[player] += input;
+    nextPlayer();
+  }
+
+  function failCommand() {
+    const player = players[currentPlayerIndex];
+    scores[player] = Math.ceil(scores[player] / 2);
+    nextPlayer();
+  }
+
+  function nextPlayer() {
+    currentPlayerIndex++;
+    if (currentPlayerIndex >= players.length) {
+      currentPlayerIndex = 0;
+      currentRound++;
+    }
+    nextCommand();
+  }
+
+  async function endGame() {
+    let sortedPlayers = [...players].sort((a, b) => scores[b] - scores[a]);
+    let finalMessage = "Game Over!\n\nFinal Standings:\n";
+    sortedPlayers.forEach((p, i) => {
+      finalMessage += `${i + 1}. ${p} - ${scores[p]} pts\n`;
+    });
+    alert(finalMessage);
+
+    await saveHistory(scores);
+
+    document.getElementById('gameArea').classList.add('hidden');
+    document.getElementById('setupGame').classList.remove('hidden');
+    document.getElementById('currentScore').textContent = '0';
+  }
+
+  function shuffleArray(arr) {
+    for (let i = arr.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+  }
+
+  function updateScoreboard() {
+    const list = document.getElementById('scoreboardList');
+    list.innerHTML = '';
+    players.forEach(p => {
+      const li = document.createElement('li');
+      li.textContent = `${p}: ${scores[p]} pts`;
+      list.appendChild(li);
+    });
+  }
+
+  // --------- Initialize App ---------
+
+  async function initApp() {
+    await loadCommands();
+    await displayHistory();
+    await loadPlayers();
+  }
+  initApp();
+</script>
+</body>
+</html>
