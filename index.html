@@ -61,25 +61,41 @@
     .commandItem:last-child {
       border-bottom: none;
     }
-    .commandItem .edit-btn, .commandItem .delete-btn {
-      position: absolute;
-      right: 5px;
-      top: 5px;
-      font-size: 0.8em;
-      padding: 2px 6px;
-      margin-left: 5px;
-      border: none;
-      border-radius: 3px;
-      cursor: pointer;
-    }
-    .commandItem .edit-btn {
-      background-color: #faa;
-      right: 45px;
-    }
-    .commandItem .delete-btn {
-      background-color: #fcc;
-      right: 5px;
-    }
+.commandItem {
+  padding-right: 90px; /* space for buttons */
+  position: relative;
+  margin-bottom: 10px;
+  background: #f0f0f0;
+  border-radius: 5px;
+  padding: 10px;
+}
+
+.commandItem::after {
+  content: "";
+  display: table;
+  clear: both;
+}
+
+.commandItem .edit-btn, .commandItem .delete-btn {
+  float: right;
+  font-size: 0.8em;
+  padding: 2px 6px;
+  margin-left: 5px;
+  border: none;
+  border-radius: 3px;
+  cursor: pointer;
+  position: relative;
+  z-index: 1;
+}
+
+.commandItem .edit-btn {
+  background-color: #faa;
+}
+
+.commandItem .delete-btn {
+  background-color: #fcc;
+}
+
     #scoreboard {
       background: #eef;
     }
