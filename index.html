@@ -712,7 +712,7 @@
     const player = players[currentPlayerIndex];
     const challenge = currentGameChallenges[currentChallengeIndex];
     currentTurnInfo.textContent = `Current Turn: ${player.name}`;
-    currentChallengeText.textContent = `Challenge: "${challenge.text}" (${challenge.category})`;
+    currentChallengeText.textContent = `Challenge: "${challenge.text}" (${challenge.description})`;
     scoreInput.value = "";
     scoreInput.focus();
     updatePlayerButtons();
