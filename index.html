@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Denchfield Half-It Challenge!</title>
   <style>
+    /* General body styling and max width */
     body {
       font-family: Arial, sans-serif;
       padding: 20px;
@@ -12,38 +13,36 @@
       margin: auto;
       background-color: white;
       color: black;
-      transition: background-color 0.3s, color 0.3s;
+      transition: background-color 0.3s ease, color 0.3s ease;
     }
-    body.dark-mode {
+    /* Dark mode styles */
+    body.dark {
       background-color: #121212;
       color: #e0e0e0;
     }
+    /* Common input/button styles */
     input, button, select, textarea {
       font-size: 1em;
       padding: 8px;
       margin: 5px 0;
       width: 100%;
       box-sizing: border-box;
-      border-radius: 4px;
-      border: 1px solid #ccc;
-      background-color: white;
-      color: black;
-      transition: background-color 0.3s, color 0.3s;
     }
-    body.dark-mode input, body.dark-mode button, body.dark-mode select, body.dark-mode textarea {
-      background-color: #333;
-      color: #eee;
-      border-color: #555;
+    /* Smaller width for inline elements */
+    input.inline, select.inline {
+      width: auto;
+      display: inline-block;
+      margin-right: 10px;
     }
-    button {
-      cursor: pointer;
-    }
-    #commandList, #gameArea, #historyArea, #playerButtons {
+    /* Section containers */
+    #commandList, #gameArea, #historyArea, #playerButtons, #playersSection, #challengesSection {
       margin-top: 20px;
     }
+    /* Hide elements with this class */
     .hidden {
       display: none;
     }
+    /* Highlight current challenge box */
     .commandBox {
       font-size: 2em;
       margin: 15px 0;
@@ -51,43 +50,53 @@
       background: #f0f0f0;
       border-radius: 5px;
       font-weight: bold;
-      transition: background-color 0.3s, color 0.3s;
+      transition: background-color 0.3s ease, color 0.3s ease;
     }
-    body.dark-mode .commandBox {
-      background: #222;
+    /* Dark mode styling for challenge box */
+    body.dark .commandBox {
+      background: #333;
     }
-    .commandBox.current {
-      font-weight: bold;
+    /* Highlight the active/current challenge */
+    .current {
+      font-weight: 900;
       font-size: 2.5em;
       color: #0044cc;
     }
-    body.dark-mode .commandBox.current {
-      color: #88caff;
+    /* Hardcore challenge styling */
+    .hardcore {
+      color: red;
+      font-weight: bold;
     }
+    /* Description below challenge text */
     .descriptionBox {
       font-size: 0.9em;
       margin: 10px 0;
       font-style: italic;
+      min-height: 1.2em;
     }
+    /* Score display font size */
     .score {
       font-size: 1.4em;
       margin: 10px 0;
     }
+    /* Scoreboard styling */
     #scoreboard {
       background: #eef;
       padding: 10px;
       margin-top: 10px;
       border-radius: 5px;
-      transition: background-color 0.3s, color 0.3s;
     }
-    body.dark-mode #scoreboard {
+    body.dark #scoreboard {
       background: #222;
     }
+    /* List inside scoreboard */
     #scoreboard ul {
       padding-left: 20px;
+      margin: 0;
     }
+    /* Player selection buttons */
     .player-btn {
-      margin: 5px;
+      margin: 5px 5px 5px 0;
       padding: 5px 10px;
       cursor: pointer;
       background-color: #ccc;
@@ -96,16 +105,14 @@
       transition: 0.3s ease;
       user-select: none;
     }
+    /* Selected player button style */
     .player-btn.selected {
       background-color: #0044cc;
       color: white;
       font-weight: bold;
       box-shadow: 0 0 5px #0044cc;
     }
-    .hardcore {
-      color: red;
-      font-weight: bold;
-    }
+    /* Edit and delete buttons for commands */
     .edit-btn, .delete-btn {
       float: right;
       font-size: 0.8em;
@@ -122,6 +129,7 @@
     .delete-btn {
       background-color: #fcc;
     }
+    /* Toggle command list button */
     #toggleCommandList {
       margin-top: 10px;
       cursor: pointer;
@@ -129,107 +137,84 @@
       border: none;
       padding: 5px 10px;
       border-radius: 5px;
+      user-select: none;
       width: auto;
     }
-    body.dark-mode #toggleCommandList {
-      background: #444;
-      color: #eee;
-    }
+    /* Dark mode toggle button */
     #darkModeToggle {
-      margin-top: 10px;
-      width: auto;
+      margin-bottom: 10px;
+      cursor: pointer;
+      background: #666;
+      color: white;
+      border: none;
       padding: 5px 10px;
       border-radius: 5px;
-      border: none;
-      background-color: #444;
-      color: white;
-      cursor: pointer;
+      user-select: none;
+      width: auto;
     }
-    body.dark-mode #darkModeToggle {
-      background-color: #eee;
-      color: #111;
-    }
-    #playersSection, #roundsSection, #gameArea, #commandControls {
+    /* Rounds and start score input styling */
+    #roundsSection, #startScoreSection {
       margin-top: 20px;
     }
-    #gameArea button {
-      width: auto;
-      margin-right: 10px;
-    }
   </style>
+
+  <!-- Firebase scripts -->
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 </head>
 <body>
-  <h1>Denchfield Half-It Challenge!</h1>
-
-  <!-- Dark Mode Toggle -->
+  <!-- Dark mode toggle button -->
   <button id="darkModeToggle">Toggle Dark Mode</button>
 
-  <!-- Players Section -->
+  <!-- Players management section -->
   <div id="playersSection">
     <h2>Players</h2>
-    <input id="newPlayerName" placeholder="Add player name" />
+    <input id="newPlayerName" placeholder="Enter player name" />
     <button onclick="addPlayer()">Add Player</button>
     <div id="playerButtons"></div>
   </div>
 
-  <!-- Number of Rounds Input -->
+  <!-- Rounds input section -->
   <div id="roundsSection">
     <label for="numRounds">Number of rounds to play:</label>
-    <input type="number" id="numRounds" min="1" value="5" />
+    <input type="number" id="numRounds" value="10" min="1" max="100" />
   </div>
 
-  <!-- Starting Score Input -->
+  <!-- Starting score input -->
   <div id="startScoreSection">
-    <label for="startScore">Starting score (default 0):</label>
-    <input type="number" id="startScore" value="0" />
+    <label for="startingScore">Starting score for each player:</label>
+    <input type="number" id="startingScore" value="0" min="0" max="10000" />
   </div>
 
-  <!-- Start Game Button -->
-  <div>
-    <button id="startGameBtn" onclick="startGame()">Start Game</button>
+  <!-- Challenges toggle and list below players -->
+  <button id="toggleCommandList">Toggle Challenge List</button>
+  <div id="challengesSection">
+    <div id="commandList"></div>
+    <input id="newCommandText" placeholder="New challenge text" />
+    <input id="newCommandDesc" placeholder="Optional description" />
+    <button onclick="addCommand()">Add Challenge</button>
   </div>
 
-  <!-- Game Area -->
+  <!-- Game playing area -->
   <div id="gameArea" class="hidden">
     <div id="currentChallenge" class="commandBox"></div>
     <div id="challengeDescription" class="descriptionBox"></div>
 
-    <div>
-      <label for="scoreInput">Enter score or fail:</label>
-      <input type="number" id="scoreInput" min="0" />
-      <button onclick="submitScore()">Submit Score</button>
-      <button onclick="failChallenge()">Fail</button>
-      <button onclick="undoLast()">Undo</button>
-    </div>
-
-    <div id="scoreboard">
-      <h3>Scoreboard</h3>
-      <ul id="scoreList"></ul>
-    </div>
+    <!-- Score input and action buttons -->
+    <input type="number" id="scoreInput" placeholder="Enter score for this challenge" min="0" />
+    <button onclick="submitScore()">Submit Score</button>
+    <button onclick="failChallenge()">Fail</button>
+    <button onclick="undoLast()">Undo Last</button>
   </div>
 
-  <!-- Challenges Section -->
-  <div id="challengesSection">
-    <button id="toggleCommandList">Toggle Challenge List</button>
-    <div id="commandList"></div>
-    <div id="commandControls">
-      <input id="newCommandText" placeholder="New challenge text" />
-      <input id="newCommandDesc" placeholder="Optional description" />
-      <button onclick="addCommand()">Add Challenge</button>
-    </div>
-  </div>
-
-  <!-- Import Challenges -->
-  <div style="margin-top:20px;">
-    <h3>Import Challenges (JSON format)</h3>
-    <textarea id="importChallengesInput" rows="6" style="width:100%;" placeholder='Paste challenges JSON here. Example: [{"text":"Challenge 1","description":"desc"},{"text":"Challenge 2"}]'></textarea>
-    <button onclick="importChallenges()">Import Challenges</button>
+  <!-- Scoreboard showing current scores -->
+  <div id="scoreboard">
+    <h3>Scoreboard</h3>
+    <ul id="scoreList"></ul>
   </div>
 
 <script>
-  // Firebase config and initialization
+  // Firebase configuration - replace with your own project config
   const firebaseConfig = {
     apiKey: "AIzaSyAusKA2YiJTelSm54EJfRbVJMk0M6mh_WM",
     authDomain: "denchfield-half-it.firebaseapp.com",
@@ -239,51 +224,48 @@
     appId: "1:494344468882:web:7a1f0d2ac938627206e94b",
     measurementId: "G-ZQQM5PNWPV"
   };
+
+  // Initialize Firebase app and Firestore database instance
   firebase.initializeApp(firebaseConfig);
   const db = firebase.firestore();
 
-  // App State Variables
-  let commands = [];
-  let players = [];
-  let selectedPlayers = [];
-  let currentRound = 0;
-  let numRounds = 5;
-  let currentChallengeIndex = 0;
-  let currentPlayerIndex = 0;
-  let hardcoreUsed = false;
-  let startScore = 0;
-  let gameInProgress = false;
+  // Global game variables
+  let players = [];            // List of player objects { name, score }
+  let selectedPlayers = [];    // Indexes of players selected for current game
+  let commands = [];           // List of challenges from Firestore
+  let currentRound = 1;        // Current round number in game
+  let numRounds = 10;          // Total rounds to play (user input)
+  let currentChallengeIndex = 0; // Index of current challenge in commands array
+  let currentPlayerIndex = 0;     // Index of current player turn
+  let scoreHistory = [];       // Stack for undo functionality (stores previous scores and states)
+  let gameInProgress = false;  // Flag for whether a game is currently running
+  let hardcoreUsed = false;    // Flag whether hardcore challenge has been used this game
 
-  // History for Undo: array of { playerIndex, roundIndex, challengeIndex, prevScore }
-  let scoreHistory = [];
-
-  // Load commands from Firebase and display
+  /** 
+   * Load all challenges from Firestore and display them with edit/delete options 
+   */
   function loadCommands() {
     commands = [];
-    document.getElementById("commandList").innerHTML = "";
+    const listDiv = document.getElementById("commandList");
+    listDiv.innerHTML = ""; // Clear existing list
+
     db.collection("commands").get().then(snapshot => {
       snapshot.forEach(doc => {
         const data = doc.data();
         const cmd = { id: doc.id, text: data.text, description: data.description || "", hardcore: data.hardcore || false };
         commands.push(cmd);
 
+        // Create div for each challenge
         const div = document.createElement("div");
-        div.className = "commandBox";
-        div.textContent = cmd.text;
-        if (cmd.description) {
-          const desc = document.createElement("div");
-          desc.className = "descriptionBox";
-          desc.textContent = cmd.description;
-          div.appendChild(desc);
-        }
+        div.innerHTML = `<strong>${cmd.text}</strong><br/><em>${cmd.description}</em>`;
 
-        // Edit button
+        // Edit button for this challenge
         const editBtn = document.createElement("button");
         editBtn.textContent = "Edit";
         editBtn.className = "edit-btn";
         editBtn.onclick = () => editCommand(cmd);
 
-        // Delete button
+        // Delete button for this challenge
         const deleteBtn = document.createElement("button");
         deleteBtn.textContent = "Delete";
         deleteBtn.className = "delete-btn";
@@ -292,283 +274,345 @@
         div.appendChild(editBtn);
         div.appendChild(deleteBtn);
 
-        document.getElementById("commandList").appendChild(div);
+        listDiv.appendChild(div);
       });
     });
   }
 
-  // Add a new command to Firebase
+  /**
+   * Add a new challenge to Firestore based on user input
+   */
   function addCommand() {
     const text = document.getElementById("newCommandText").value.trim();
     const description = document.getElementById("newCommandDesc").value.trim();
-    if (!text) return alert("Please enter a challenge text");
+    if (!text) {
+      alert("Challenge text cannot be empty.");
+      return;
+    }
     db.collection("commands").add({ text, description }).then(() => {
-      loadCommands();
+      loadCommands(); // Reload list after adding
       document.getElementById("newCommandText").value = "";
       document.getElementById("newCommandDesc").value = "";
     });
   }
 
-  // Edit existing command
+  /**
+   * Edit an existing challenge - prompts user for new text and description
+   * @param {object} cmd - Challenge object to edit
+   */
   function editCommand(cmd) {
     const newText = prompt("Edit challenge text:", cmd.text);
-    if (newText === null) return;
+    if (newText === null) return; // Cancelled
+
     const newDesc = prompt("Edit description:", cmd.description);
-    db.collection("commands").doc(cmd.id).set({ text: newText, description: newDesc || "" }).then(loadCommands);
+    if (newDesc === null) return; // Cancelled
+
+    db.collection("commands").doc(cmd.id).set({ text: newText.trim(), description: newDesc.trim() }).then(loadCommands);
   }
 
-  // Delete a command
+  /**
+   * Delete a challenge by its Firestore document ID after user confirmation
+   * @param {string} id - Firestore doc id of challenge to delete
+   */
   function deleteCommand(id) {
     if (confirm("Delete this challenge?")) {
       db.collection("commands").doc(id).delete().then(loadCommands);
     }
   }
 
-  // Player management
+  /**
+   * Add a new player to the player list and update UI
+   */
   function addPlayer() {
-    const name = document.getElementById("newPlayerName").value.trim();
-    if (!name) return alert("Enter player name");
-    if (players.some(p => p.name.toLowerCase() === name.toLowerCase())) {
-      alert("Player already exists");
+    const input = document.getElementById("newPlayerName");
+    const name = input.value.trim();
+    if (!name) {
+      alert("Player name cannot be empty.");
       return;
     }
-    players.push({ name, score: 0 });
-    updatePlayerButtons();
-    document.getElementById("newPlayerName").value = "";
+    players.push({ name: name, score: 0 });
+    input.value = "";
+    renderPlayerButtons();
   }
 
-  // Update player buttons
-  function updatePlayerButtons() {
+  /**
+   * Render buttons for each player allowing selection/deselection
+   */
+  function renderPlayerButtons() {
     const container = document.getElementById("playerButtons");
-    container.innerHTML = "";
-    players.forEach((p, i) => {
+    container.innerHTML = ""; // Clear existing buttons
+    players.forEach((player, index) => {
       const btn = document.createElement("button");
-      btn.textContent = p.name;
+      btn.textContent = player.name;
       btn.className = "player-btn";
-      if (selectedPlayers.includes(i)) btn.classList.add("selected");
+      if (selectedPlayers.includes(index)) {
+        btn.classList.add("selected");
+      }
       btn.onclick = () => {
-        // Toggle selection
-        const idx = selectedPlayers.indexOf(i);
-        if (idx === -1) selectedPlayers.push(i);
-        else selectedPlayers.splice(idx,1);
-        updatePlayerButtons();
+        togglePlayerSelection(index);
       };
       container.appendChild(btn);
     });
   }
 
-  // Dark mode toggle
-  document.getElementById("darkModeToggle").onclick = () => {
-    document.body.classList.toggle("dark-mode");
-  };
-
-  // Toggle challenges list visibility
-  document.getElementById("toggleCommandList").onclick = () => {
-    document.getElementById("commandList").classList.toggle("hidden");
-  };
-
-  // Import challenges JSON
-  function importChallenges() {
-    const input = document.getElementById("importChallengesInput").value.trim();
-    if (!input) return alert("Please paste JSON challenge data to import.");
-    let challenges;
-    try {
-      challenges = JSON.parse(input);
-    } catch (e) {
-      return alert("Invalid JSON format. Please check your input.");
+  /**
+   * Toggle selection/deselection of a player by index
+   * @param {number} index - Player index to toggle
+   */
+  function togglePlayerSelection(index) {
+    const pos = selectedPlayers.indexOf(index);
+    if (pos === -1) {
+      selectedPlayers.push(index);
+    } else {
+      selectedPlayers.splice(pos, 1);
     }
-    if (!Array.isArray(challenges)) return alert("JSON must be an array of challenge objects.");
-    const validChallenges = challenges.filter(c => c.text && typeof c.text === "string");
-    if (validChallenges.length === 0) return alert("No valid challenges found (each must have a 'text' property).");
-    let addedCount = 0;
-    validChallenges.forEach(challenge => {
-      db.collection("commands").add({
-        text: challenge.text,
-        description: challenge.description || ""
-      }).then(() => {
-        addedCount++;
-        if (addedCount === validChallenges.length) {
-          alert(`${addedCount} challenges imported successfully.`);
-          loadCommands();
-          document.getElementById("importChallengesInput").value = "";
-        }
-      }).catch(err => {
-        console.error("Error adding challenge:", err);
-        alert("Some challenges could not be imported. Check console for details.");
-      });
+    renderPlayerButtons();
+  }
+
+  /**
+   * Start a new game with current selected players, rounds and starting score
+   */
+  function startGame() {
+    if (selectedPlayers.length === 0) {
+      alert("Please select at least one player.");
+      return;
+    }
+    numRounds = parseInt(document.getElementById("numRounds").value, 10);
+    if (isNaN(numRounds) || numRounds < 1) {
+      alert("Please enter a valid number of rounds.");
+      return;
+    }
+    const startScoreInput = parseInt(document.getElementById("startingScore").value, 10);
+    const startScore = isNaN(startScoreInput) ? 0 : startScoreInput;
+
+    // Initialize player scores
+    selectedPlayers.forEach(idx => {
+      players[idx].score = startScore;
+    });
+
+    currentRound = 1;
+    currentPlayerIndex = 0;
+    currentChallengeIndex = 0;
+    scoreHistory = [];
+    gameInProgress = true;
+    hardcoreUsed = false;
+
+    // Hide setup UI and show game UI
+    document.getElementById("gameArea").classList.remove("hidden");
+    document.getElementById("playersSection").classList.add("hidden");
+    document.getElementById("roundsSection").classList.add("hidden");
+    document.getElementById("startScoreSection").classList.add("hidden");
+    document.getElementById("challengesSection").classList.add("hidden");
+    document.getElementById("toggleCommandList").classList.add("hidden");
+
+    updateDisplay();
+  }
+
+  /**
+   * Update the main game display: current player, challenge, scores, round info
+   */
+  function updateDisplay() {
+    // Show current challenge with hardcore indication
+    const challenge = commands[currentChallengeIndex];
+    const currentChallengeDiv = document.getElementById("currentChallenge");
+    currentChallengeDiv.textContent = challenge ? challenge.text : "No challenge available";
+
+    // Apply styles for current and hardcore challenge
+    currentChallengeDiv.className = "commandBox current";
+    if (challenge && isHardcoreChallenge(currentChallengeIndex)) {
+      currentChallengeDiv.classList.add("hardcore");
+    }
+
+    // Show challenge description if any
+    const descDiv = document.getElementById("challengeDescription");
+    descDiv.textContent = challenge && challenge.description ? challenge.description : "";
+
+    // Update scoreboard with selected players and their scores
+    const scoreList = document.getElementById("scoreList");
+    scoreList.innerHTML = "";
+    selectedPlayers.forEach(idx => {
+      const li = document.createElement("li");
+      li.textContent = `${players[idx].name}: ${players[idx].score}`;
+      // Highlight current player's name
+      if (idx === selectedPlayers[currentPlayerIndex]) {
+        li.style.fontWeight = "bold";
+        li.style.color = "#0044cc";
+      }
+      scoreList.appendChild(li);
     });
   }
 
-  // Initialize game state and UI
-  function startGame() {
-    if (selectedPlayers.length === 0) return alert("Select at least one player.");
-    numRounds = parseInt(document.getElementById("numRounds").value);
-    if (isNaN(numRounds) || numRounds < 1) return alert("Enter a valid number of rounds.");
-    startScore = parseInt(document.getElementById("startScore").value);
-    if (isNaN(startScore)) startScore = 0;
-
-    // Initialize players scores
-    selectedPlayers.forEach(i => players[i].score = startScore);
-
-    if (commands.length < numRounds) {
-      if (!confirm(`There are fewer challenges (${commands.length}) than rounds (${numRounds}). The challenges will loop.`)) {
-        return;
-      }
-    }
-
-    currentRound = 1;
-    currentChallengeIndex = 0;
-    currentPlayerIndex = 0;
-    hardcoreUsed = false;
-    scoreHistory = [];
-    gameInProgress = true;
-
-    document.getElementById("gameArea").classList.remove("hidden");
-    document.getElementById("challengesSection").classList.add("hidden");
-    document.getElementById("roundsSection").classList.add("hidden");
-    document.getElementById("startScoreSection").classList.add("hidden");
-    document.getElementById("startGameBtn").disabled = true;
-    document.getElementById("playersSection").querySelectorAll("button, input").forEach(el => el.disabled = true);
-
-    showNextChallenge();
-    updateScoreboard();
+  /**
+   * Check if a given challenge index should be a hardcore challenge
+   * Rules: only once every 10 challenges, never on last challenge
+   * @param {number} idx - challenge index
+   * @returns {boolean} whether challenge is hardcore for this round
+   */
+  function isHardcoreChallenge(idx) {
+    // If hardcore already used in this game, disable others
+    if (hardcoreUsed) return false;
+    // Never last challenge
+    if (idx === commands.length - 1) return false;
+    // Every 10th challenge (starting at index 9, 19, 29, etc.)
+    return (idx + 1) % 10 === 0;
   }
 
-  // Show the current challenge and player
-  function showNextChallenge() {
-    if (!gameInProgress) return;
-    if (currentRound > numRounds) {
-      alert("Game over!");
-      endGame();
+  /**
+   * Submit a score for the current challenge and player,
+   * advances turn/round, and handles hardcore challenge failure logic
+   */
+  function submitScore() {
+    if (!gameInProgress) return alert("Start the game first!");
+
+    const scoreInput = document.getElementById("scoreInput");
+    let score = parseInt(scoreInput.value, 10);
+    if (isNaN(score) || score < 0) {
+      alert("Enter a valid non-negative score.");
       return;
     }
 
-    const challenge = commands[currentChallengeIndex % commands.length];
-    const playerIndex = selectedPlayers[currentPlayerIndex];
-    const player = players[playerIndex];
-
-    // Display challenge and player info
-    const challengeBox = document.getElementById("currentChallenge");
-    challengeBox.textContent = `Round ${currentRound} - ${player.name}: ${challenge.text}`;
-    challengeBox.className = "commandBox current";
-    if (challenge.hardcore) challengeBox.classList.add("hardcore");
-
-    const descBox = document.getElementById("challengeDescription");
-    descBox.textContent = challenge.description || "";
-
-    // Clear score input
-    document.getElementById("scoreInput").value = "";
-  }
-
-  // Submit score for current player/challenge
-  function submitScore() {
-    if (!gameInProgress) return;
-    const input = document.getElementById("scoreInput").value;
-    if (input === "") return alert("Enter a score or click Fail.");
-    const score = parseInt(input);
-    if (isNaN(score) || score < 0) return alert("Enter a valid non-negative score.");
-
-    const challenge = commands[currentChallengeIndex % commands.length];
-    const playerIndex = selectedPlayers[currentPlayerIndex];
-    const player = players[playerIndex];
-
-    // Save previous score for undo
+    const currentPlayer = selectedPlayers[currentPlayerIndex];
+    const currentChallenge = commands[currentChallengeIndex];
+    // Save state for undo
     scoreHistory.push({
-      playerIndex,
       round: currentRound,
+      playerIndex: currentPlayerIndex,
       challengeIndex: currentChallengeIndex,
-      prevScore: player.score
+      players: JSON.parse(JSON.stringify(players)),
+      hardcoreUsed: hardcoreUsed
     });
 
-    player.score += score;
+    // Add score to player
+    players[currentPlayer].score += score;
 
-    if (challenge.hardcore) hardcoreUsed = true;
+    // If this was a hardcore challenge, mark hardcoreUsed
+    if (isHardcoreChallenge(currentChallengeIndex)) {
+      hardcoreUsed = true;
+    }
 
-    nextTurn();
+    advanceTurn();
+    scoreInput.value = "";
   }
 
-  // Fail challenge
+  /**
+   * Handle failing the current challenge:
+   * - For hardcore challenge, player's score resets to 0
+   * - For normal challenge, no score change
+   * Then advance turn/round
+   */
   function failChallenge() {
-    if (!gameInProgress) return;
-    const challenge = commands[currentChallengeIndex % commands.length];
-    const playerIndex = selectedPlayers[currentPlayerIndex];
-    const player = players[playerIndex];
+    if (!gameInProgress) return alert("Start the game first!");
 
+    const currentPlayer = selectedPlayers[currentPlayerIndex];
+    const currentChallenge = commands[currentChallengeIndex];
+    // Save state for undo
     scoreHistory.push({
-      playerIndex,
       round: currentRound,
+      playerIndex: currentPlayerIndex,
       challengeIndex: currentChallengeIndex,
-      prevScore: player.score
+      players: JSON.parse(JSON.stringify(players)),
+      hardcoreUsed: hardcoreUsed
     });
 
-    // Half the score, round down
-    player.score = Math.floor(player.score / 2);
+    if (isHardcoreChallenge(currentChallengeIndex)) {
+      players[currentPlayer].score = 0;
+      hardcoreUsed = true;
+    }
+    // Else no score change for fail
 
-    if (challenge.hardcore) hardcoreUsed = true;
-
-    nextTurn();
+    advanceTurn();
   }
 
-  // Undo last submitted score/fail
+  /**
+   * Undo the last score or fail action by restoring previous state from history
+   */
   function undoLast() {
-    if (scoreHistory.length === 0) return alert("Nothing to undo.");
-    const last = scoreHistory.pop();
-    players[last.playerIndex].score = last.prevScore;
+    if (scoreHistory.length === 0) {
+      alert("Nothing to undo.");
+      return;
+    }
+    const lastState = scoreHistory.pop();
 
-    // Reset currentRound, challenge, player indexes to the undone step
-    currentRound = last.round;
-    currentChallengeIndex = last.challengeIndex;
-    currentPlayerIndex = selectedPlayers.indexOf(last.playerIndex);
+    currentRound = lastState.round;
+    currentPlayerIndex = lastState.playerIndex;
+    currentChallengeIndex = lastState.challengeIndex;
+    players = lastState.players;
+    hardcoreUsed = lastState.hardcoreUsed;
 
-    updateScoreboard();
-    showNextChallenge();
+    updateDisplay();
   }
 
-  // Advance to next player/challenge/round
-  function nextTurn() {
-    currentChallengeIndex++;
+  /**
+   * Advance to the next turn, challenge, and round as appropriate
+   * Ends the game after all rounds are played
+   */
+  function advanceTurn() {
+    // Move to next player
     currentPlayerIndex++;
     if (currentPlayerIndex >= selectedPlayers.length) {
       currentPlayerIndex = 0;
+      // Next challenge only after all players finished current challenge
+      currentChallengeIndex++;
+      // Check for end of challenges or rounds
+      if (currentChallengeIndex >= commands.length) {
+        currentChallengeIndex = 0; // loop back if needed
+      }
+
+      // Increase round only when all challenges done for all players?
+      // Here we'll advance round every time all players finished one challenge.
       currentRound++;
+      if (currentRound > numRounds) {
+        alert("Game over!");
+        gameInProgress = false;
+        showSetupUI();
+        return;
+      }
     }
-    updateScoreboard();
-    if (currentRound > numRounds) {
-      alert("Game over!");
-      endGame();
-    } else {
-      showNextChallenge();
-    }
+    updateDisplay();
   }
 
-  // Update scoreboard display
-  function updateScoreboard() {
-    const ul = document.getElementById("scoreList");
-    ul.innerHTML = "";
-    selectedPlayers.forEach(i => {
-      const p = players[i];
-      const li = document.createElement("li");
-      li.textContent = `${p.name}: ${p.score}`;
-      ul.appendChild(li);
-    });
-  }
-
-  // End game cleanup
-  function endGame() {
-    gameInProgress = false;
+  /**
+   * Show the setup UI and hide the game area UI
+   */
+  function showSetupUI() {
     document.getElementById("gameArea").classList.add("hidden");
-    document.getElementById("challengesSection").classList.remove("hidden");
+    document.getElementById("playersSection").classList.remove("hidden");
     document.getElementById("roundsSection").classList.remove("hidden");
     document.getElementById("startScoreSection").classList.remove("hidden");
-    document.getElementById("startGameBtn").disabled = false;
-    document.getElementById("playersSection").querySelectorAll("button, input").forEach(el => el.disabled = false);
+    document.getElementById("challengesSection").classList.remove("hidden");
+    document.getElementById("toggleCommandList").classList.remove("hidden");
   }
 
-  // Initial loading
-  window.onload = () => {
-    loadCommands();
-    updatePlayerButtons();
+  /**
+   * Toggles the visibility of the command list UI
+   */
+  document.getElementById("toggleCommandList").onclick = () => {
+    const list = document.getElementById("commandList");
+    if (list.style.display === "none" || list.style.display === "") {
+      list.style.display = "block";
+    } else {
+      list.style.display = "none";
+    }
   };
+
+  /**
+   * Toggles dark mode on/off by toggling body class
+   */
+  document.getElementById("darkModeToggle").onclick = () => {
+    document.body.classList.toggle("dark");
+  };
+
+  // Load commands initially
+  loadCommands();
+
+  // Render players (empty at first)
+  renderPlayerButtons();
+
+  // For quick start, add a Start Game button below players
+  const startBtn = document.createElement("button");
+  startBtn.textContent = "Start Game";
+  startBtn.onclick = startGame;
+  document.getElementById("playersSection").appendChild(startBtn);
 </script>
 </body>
 </html>
