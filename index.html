@@ -749,13 +749,15 @@
     }
     const player = players[currentPlayerIndex];
     const challenge = currentGameChallenges[currentChallengeIndex];
+	const challengeNumber = currentChallengeIndex + 1;
+	const totalChallenges = currentGameChallenges.length;
     currentTurnInfo.textContent = `Current Turn: ${player.name}`;
 	let modifiers = [];
 	if (currentChallengeIndex === hardcoreChallengeIndex) modifiers.push("🔥 HARDCORE");
 	if (currentChallengeIndex === jokerChallengeIndex) modifiers.push("🃏 JOKER");
 
 	const extra = modifiers.length > 0 ? ` [${modifiers.join(" + ")}]` : "";
-	currentChallengeText.textContent = `Challenge: "${challenge.text}" (${challenge.description})${extra}`;
+	currentChallengeText.textContent = `Challenge ${challengeNumber} of ${totalChallenges}: "${challenge.text}" (${challenge.description})${extra}`;
 
 	renderScoringButtons(challenge.text);
     scoreInput.value = "";
