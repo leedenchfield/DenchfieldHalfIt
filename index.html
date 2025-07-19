@@ -883,8 +883,6 @@
   // Game end logic and popup scoreboard
   function endGame() {
     gameStarted = false;
-	players = players.map(p => ({ ...p, score: 0 }));
-	savePlayersToFirebase();
     gameArea.classList.add("hidden");
 
     // Determine winner(s)
