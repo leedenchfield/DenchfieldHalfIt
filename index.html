@@ -288,6 +288,15 @@
       Starting Score (optional, default 0):
 	<input type="number" inputmode="numeric" id="startingScore" min="0" value="0" />
     </label>
+	  <label>
+		<input type="checkbox" id="hardcoreMode" />
+		Enable Hardcore Mode
+	  </label>
+	  <br />
+	  <label>
+		<input type="checkbox" id="jokerMode" />
+		Enable Joker Mode
+	  </label>
   </section>
 
   <button id="startGameBtn">Start Game</button>
@@ -342,6 +351,8 @@
   let commands = [];
   let selectedPlayers = new Set();
   let gameStarted = false;
+  let hardcoreChallengeIndex = null;
+  let jokerChallengeIndex = null;
   let categoryRequirements = {}; // tracks how many challenges per category
 
   let currentGameChallenges = []; // challenges selected for this game (unique, random)
@@ -692,6 +703,29 @@
     
     // Reconstruct: scoring first, shuffled middle, finishing last
     currentGameChallenges = [firstChallenge, ...middleChallenges, lastChallenge];
+	
+	// Handle Hardcore and Joker modes
+	hardcoreChallengeIndex = null;
+	jokerChallengeIndex = null;
+
+	const useHardcore = document.getElementById("hardcoreMode").checked;
+	const useJoker = document.getElementById("jokerMode").checked;
+
+	// Get eligible challenge indexes (not first or last)
+	const eligibleIndexes = currentGameChallenges.map((_, i) => i).filter(i => i !== 0 && i !== currentGameChallenges.length - 1);
+
+	// Randomly assign hardcore challenge
+	if (useHardcore && eligibleIndexes.length > 0) {
+	  const idx = Math.floor(Math.random() * eligibleIndexes.length);
+	  hardcoreChallengeIndex = eligibleIndexes[idx];
+	}
+
+	// Recompute eligible for Joker (exclude hardcore index)
+	if (useJoker && eligibleIndexes.length > 1) {
+	  const jokerEligible = eligibleIndexes.filter(i => i !== hardcoreChallengeIndex);
+	  const idx = Math.floor(Math.random() * jokerEligible.length);
+	  jokerChallengeIndex = jokerEligible[idx];
+	}
 
     // Update UI
     updatePlayerButtons();
@@ -716,7 +750,13 @@
     const player = players[currentPlayerIndex];
     const challenge = currentGameChallenges[currentChallengeIndex];
     currentTurnInfo.textContent = `Current Turn: ${player.name}`;
-    currentChallengeText.textContent = `Challenge: "${challenge.text}" (${challenge.description})`;
+	let modifiers = [];
+	if (currentChallengeIndex === hardcoreChallengeIndex) modifiers.push("🔥 HARDCORE");
+	if (currentChallengeIndex === jokerChallengeIndex) modifiers.push("🃏 JOKER");
+
+	const extra = modifiers.length > 0 ? ` [${modifiers.join(" + ")}]` : "";
+	currentChallengeText.textContent = `Challenge: "${challenge.text}" (${challenge.description})${extra}`;
+
 	renderScoringButtons(challenge.text);
     scoreInput.value = "";
     scoreInput.focus();
@@ -734,7 +774,13 @@
 
     const player = players[currentPlayerIndex];
     const oldScore = player.score;
-    player.score += scoreVal;
+    // Check for Joker challenge
+	if (currentChallengeIndex === jokerChallengeIndex) {
+	  player.score += scoreVal * 2; // double score for this turn
+	} else {
+	  player.score += scoreVal;
+	}
+
 
     // Save action for undo
     lastActionsStack.push({
@@ -761,12 +807,20 @@
     const oldScore = player.score;
     let newScore;
     
-    if (oldScore === 0) {
-      newScore = 0; // Stay at 0 if already 0
-    } else {
-      newScore = Math.ceil(oldScore / 2);
-      if (newScore < 1) newScore = 1; // Minimum score is 1 unless already 0
-    }
+	if (currentChallengeIndex === hardcoreChallengeIndex) {
+	  newScore = 0;
+	} else if (currentChallengeIndex === jokerChallengeIndex) {
+	  newScore = Math.ceil(oldScore / 4);
+	  if (newScore < 1) newScore = 1;
+	} else {
+	  if (oldScore === 0) {
+		newScore = 0;
+	  } else {
+		newScore = Math.ceil(oldScore / 2);
+		if (newScore < 1) newScore = 1;
+	  }
+	}
+
     
     player.score = newScore;
 
