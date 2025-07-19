@@ -494,8 +494,6 @@
   function updatePlayerButtons() {
     playerButtonsDiv.innerHTML = "";
     players.forEach((p, i) => {
-	if (gameStarted && !p.isActive) return; // Hide inactive players during game
-
       const btn = document.createElement("button");
       btn.textContent = p.name;
       btn.className = "";
@@ -650,14 +648,13 @@
     gameHistory = [];
 
     // Filter selected players and reset scores
-	players = players.map(p => {
-	  return {
-		...p,
-		score: selectedPlayers.has(p.name) ? startScore : 0,
-		isActive: selectedPlayers.has(p.name)
-	  };
-	});
-
+    players = players.map(p => {
+      if (selectedPlayers.has(p.name)) {
+        return { name: p.name, score: startScore };
+      } else {
+        return null;
+      }
+    }).filter(p => p !== null);
 
     // Select challenges based on category requirements
     currentGameChallenges = [];
@@ -886,7 +883,6 @@
   // Game end logic and popup scoreboard
   function endGame() {
     gameStarted = false;
-	players = players.map(p => ({ ...p, isActive: false }));
     gameArea.classList.add("hidden");
 
     // Determine winner(s)
@@ -994,7 +990,7 @@ function renderScoringButtons(challengeText) {
   loadCommandsFromFirebase();
   loadHistoryFromFirebase();
   
-  // Apply dark mode from localStorage on load
+	// Apply dark mode from localStorage on load
 	const darkPref = localStorage.getItem("darkModeEnabled");
 	if (darkPref === "true") {
 	  document.body.classList.add("dark-mode");
