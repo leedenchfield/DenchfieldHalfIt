@@ -905,12 +905,9 @@
   submitScoreBtn.addEventListener("click", submitScore);
   failBtn.addEventListener("click", failChallenge);
   undoBtn.addEventListener("click", undoLastAction);
-	darkModeToggle.addEventListener("click", () => {
-	  document.body.classList.toggle("dark-mode");
-	  const isDark = document.body.classList.contains("dark-mode");
-	  localStorage.setItem("darkModeEnabled", isDark ? "true" : "false");
-	});
-
+  darkModeToggle.addEventListener("click", () => {
+    document.body.classList.toggle("dark-mode");
+  });
   toggleCommandListBtn.addEventListener("click", () => {
     commandListDiv.style.display = commandListDiv.style.display === "none" ? "block" : "none";
   });
@@ -989,13 +986,6 @@ function renderScoringButtons(challengeText) {
   loadPlayersFromFirebase();
   loadCommandsFromFirebase();
   loadHistoryFromFirebase();
-  
-	// Apply dark mode from localStorage on load
-	const darkPref = localStorage.getItem("darkModeEnabled");
-	if (darkPref === "true") {
-	  document.body.classList.add("dark-mode");
-	}
-
   
 
 </script>
