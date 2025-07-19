@@ -300,6 +300,8 @@
     <div id="scoreInputArea">
 	<input type="number" inputmode="numeric" id="scoreInput"  min="0" placeholder="Enter score for this turn" />
     </div>
+	
+	<div id="scoreButtonsArea"></div>
 
     <div id="gameActionButtons">
       <button id="submitScoreBtn">Submit Score</button>
@@ -715,6 +717,7 @@
     const challenge = currentGameChallenges[currentChallengeIndex];
     currentTurnInfo.textContent = `Current Turn: ${player.name}`;
     currentChallengeText.textContent = `Challenge: "${challenge.text}" (${challenge.description})`;
+	renderScoringButtons(challenge.text);
     scoreInput.value = "";
     scoreInput.focus();
     updatePlayerButtons();
@@ -867,6 +870,55 @@ function endGameEarly() {
 }
 
 endGameBtn.addEventListener("click", endGameEarly);
+
+function renderScoringButtons(challengeText) {
+  const scoreInput = document.getElementById("scoreInput");
+  const buttonsArea = document.getElementById("scoreButtonsArea");
+
+  buttonsArea.innerHTML = ""; // Clear old buttons
+
+  const text = challengeText.toLowerCase();
+  const match = challengeText.match(/\d+/);
+  const base = match ? parseInt(match[0], 10) : null;
+  let scores = [];
+
+  if (text.includes("treble") && base >= 1 && base <= 20) {
+    scores = [base, base * 2, base * 3];
+  } else if (text.includes("double") && base >= 1 && base <= 20) {
+    scores = [base, base * 2];
+  } else if ((text.includes("big") || text.includes("small")) && base >= 1 && base <= 20) {
+    scores = [base];
+  } else if (text.includes("inner bullseye")) {
+    scores = [50, 100, 150];
+  } else if (text.includes("outer bullseye")) {
+    scores = [25, 50, 75];
+  } else if (text.includes("loop")) {
+    scores = [70, 140, 210];
+  } else if (text.includes("61")) {
+    scores = [61];
+  } else {
+    // Show manual input only
+    scoreInput.style.display = "inline-block";
+    buttonsArea.style.display = "none";
+    return;
+  }
+
+  // Show buttons, hide input
+  scoreInput.style.display = "none";
+  buttonsArea.style.display = "block";
+
+  scores.forEach(score => {
+    const btn = document.createElement("button");
+    btn.textContent = score;
+    btn.style.margin = "5px";
+    btn.onclick = () => {
+      scoreInput.value = score;
+      submitScore(); // uses your existing function
+    };
+    buttonsArea.appendChild(btn);
+  });
+}
+
 
   // Initial load from Firebase
   loadPlayersFromFirebase();
