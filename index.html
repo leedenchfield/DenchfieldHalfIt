@@ -883,14 +883,16 @@ function renderScoringButtons(challengeText) {
   let scores = [];
 
   if (text.includes("treble") && base >= 1 && base <= 20) {
-    scores = [base, base * 2, base * 3];
+    scores = [base * 3, base * 6, base * 9];
   } else if (text.includes("double") && base >= 1 && base <= 20) {
-    scores = [base, base * 2];
+    scores = [base * 2, base * 4, base * 6];
   } else if ((text.includes("big") || text.includes("small")) && base >= 1 && base <= 20) {
-    scores = [base];
-  } else if (text.includes("inner bullseye")) {
+    scores = [base, base * 2, base * 3];
+  } else if (text.includes("any") && base >= 1 && base <= 20) {
+    scores = [base, base * 2, base * 3, base * 4, base * 5, base * 6, base * 7, base * 8, base * 9];
+  } else if (text.includes("bullseye")) {
     scores = [50, 100, 150];
-  } else if (text.includes("outer bullseye")) {
+  } else if (text.includes("25")) {
     scores = [25, 50, 75];
   } else if (text.includes("loop")) {
     scores = [70, 140, 210];
