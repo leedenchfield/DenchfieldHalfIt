@@ -436,11 +436,12 @@
 	  input.mode = "numeric";
       input.min = "0";
       input.max = "50";
-      input.value = categoryRequirements[category] || 0;
-      input.addEventListener("input", () => {
-        categoryRequirements[category] = parseInt(input.value) || 0;
-        updateCategorySummary();
-      });
+	// Show empty string for undefined/null, otherwise show the value (even if it's 0)
+		input.value = categoryRequirements[category] ?? '';
+		input.addEventListener("input", () => {
+		  categoryRequirements[category] = parseInt(input.value) || 0;
+		  updateCategorySummary();
+		});
       
       div.appendChild(label);
       div.appendChild(input);
