@@ -475,7 +475,7 @@
   </section>
 
   <!-- History -->
-  <section id="historyArea">
+  <section id="historyArea" class="hidden">
     <h3>📜 Game History</h3>
     <ul id="historyList"></ul>
   </section>
@@ -1051,6 +1051,7 @@ function startGame() {
   // 🚀 Start the game
 	gameArea.classList.remove("hidden");
 	document.getElementById("scoreboard").classList.remove("hidden");
+	document.getElementById("historyArea").classList.remove("hidden");
 	updatePlayerButtons();
 	updateScoreboard();
 	renderHistory();
@@ -1316,6 +1317,8 @@ function startGame() {
 	    // hide play UI
 		gameArea.classList.add("hidden");
 		document.getElementById("scoreboard").classList.add("hidden");
+		document.getElementById("historyArea").classList.add("hidden");
+		// show setup UI
 	  	document.getElementById("setupContainer").style.display = "block";
 	}
   
