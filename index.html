@@ -1350,6 +1350,9 @@ function startGame() {
 		const totalReq = Object.values(categoryRequirements)
 							.reduce((a, b) => a + b, 0);
 		if (totalReq !== num) return false;
+		    // must include at least one scoring & one finishing
+		if ((categoryRequirements['scoring'] || 0) < 1)    return false;
+		if ((categoryRequirements['finishing'] || 0) < 1)  return false;
 	}
 
 	// 4) must have at least one command loaded
