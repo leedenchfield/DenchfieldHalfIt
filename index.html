@@ -330,7 +330,69 @@
 	.hidden {
 	display: none !important;
 	}
+	.toggle-group {
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+	margin-top: 10px;
+	}
 
+	.switch-label {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	font-weight: bold;
+	cursor: pointer;
+	position: relative;
+	}
+
+	.switch-label input[type="checkbox"] {
+	width: 0;
+	height: 0;
+	opacity: 0;
+	position: absolute;
+	}
+
+	.switch-slider {
+	width: 40px;
+	height: 20px;
+	background-color: #ccc;
+	border-radius: 12px;
+	position: relative;
+	transition: background-color 0.3s;
+	}
+
+	.switch-slider::before {
+	content: "";
+	position: absolute;
+	top: 2px;
+	left: 2px;
+	width: 16px;
+	height: 16px;
+	background-color: white;
+	border-radius: 50%;
+	transition: transform 0.3s;
+	}
+
+	.switch-label input[type="checkbox"]:checked + .switch-slider {
+	background-color: #4caf50;
+	}
+
+	.switch-label input[type="checkbox"]:checked + .switch-slider::before {
+	transform: translateX(20px);
+	}
+
+	body.dark-mode .switch-slider {
+	background-color: #555;
+	}
+
+	body.dark-mode .switch-label input[type="checkbox"]:checked + .switch-slider {
+	background-color: #81c784;
+	}
+
+	.label-text {
+	font-size: 1em;
+	}
   </style>
 
   <!-- Firebase libraries just adding this to force an update-->
@@ -400,26 +462,38 @@
 	<details id="specialRulesPanel">
 	   <summary><h2 style="display: inline; cursor: pointer;">🎲 Gameplay Modifiers</h2></summary>
 	  <div style="margin-top: 10px; padding-left: 10px;">
-		<label>
-		  <input type="checkbox" id="hardcoreMode" />
-		  Enable Hardcore Mode (🔥 fail = reset score)
-		</label><br />
-		<label>
-		  <input type="checkbox" id="jokerMode" />
-		  Enable Joker Mode (🃏 double or ¾ penalty)
-		</label><br />
-		<label>
-		  <input type="checkbox" id="doubleTroubleMode" />
-		  Double Trouble (💥 Max score = double it)
-		</label><br />
-		<label>
-		  <input type="checkbox" id="streakBonusMode" />
-		  Streak Bonus (🔥 3 successful turns = +20 points)
-		</label><br />
-		<label>
-		  <input type="checkbox" id="chaosMode" />
-		  Chaos Mode (🌀 Random challenge each turn)
-		</label><br />
+		<div class="toggle-group">
+		<label class="switch-label">
+			<input type="checkbox" id="hardcoreMode" />
+			<span class="switch-slider"></span>
+			<span class="label-text">🔥 Hardcore Mode</span>
+		</label>
+
+		<label class="switch-label">
+			<input type="checkbox" id="jokerMode" />
+			<span class="switch-slider"></span>
+			<span class="label-text">🃏 Joker Mode</span>
+		</label>
+
+		<label class="switch-label">
+			<input type="checkbox" id="doubleTroubleMode" />
+			<span class="switch-slider"></span>
+			<span class="label-text">💥 Double Trouble</span>
+		</label>
+
+		<label class="switch-label">
+			<input type="checkbox" id="streakBonusMode" />
+			<span class="switch-slider"></span>
+			<span class="label-text">🔥 Streak Bonus</span>
+		</label>
+
+		<label class="switch-label">
+			<input type="checkbox" id="chaosMode" />
+			<span class="switch-slider"></span>
+			<span class="label-text">🌀 Chaos Mode</span>
+		</label>
+		</div>
+		<br />
 		<div id="chaosCountInputs" style="display: none; margin-top: 10px;">
 		  <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
 			<label for="jokerChaosCount" style="min-width: 180px;"><strong>Joker Rounds in Chaos:</strong></label>
