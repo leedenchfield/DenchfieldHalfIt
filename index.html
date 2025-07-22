@@ -446,7 +446,7 @@
     <div class="category-summary" id="categorySummary"></div>
   </section>
 
-  <button id="startGameBtn">Start Game</button>
+  <button id="startGameBtn" class="hidden">🎯 Let's Play!</button>
 </div>
 
   <!-- Game area -->
@@ -633,6 +633,7 @@
 			categoryRequirements[category] = current - 1;
 			input.value = categoryRequirements[category];
 			updateCategorySummary();
+			updateStartButtonState();
 		  }
 		};
 
@@ -647,6 +648,7 @@
 		input.addEventListener("input", () => {
 		  categoryRequirements[category] = parseInt(input.value) || 0;
 		  updateCategorySummary();
+		  updateStartButtonState();
 		});
 
 		// Plus Button
@@ -657,6 +659,7 @@
 		  categoryRequirements[category] = (categoryRequirements[category] || 0) + 1;
 		  input.value = categoryRequirements[category];
 		  updateCategorySummary();
+		  updateStartButtonState();
 		};
 
 		div.appendChild(label);
@@ -667,6 +670,7 @@
 	  });
 
 	  updateCategorySummary();
+	  updateStartButtonState();
 	}
 
   function updateCategorySummary() {
@@ -1331,13 +1335,53 @@ function startGame() {
 	  }, 500);
 	}
 
+	// ———————— Game-Ready Checker ————————
+
+	function isGameReady() {
+	// 1) at least one player selected
+	if (selectedPlayers.size === 0) return false;
+
+	// 2) valid challenge count
+	const num = parseInt(document.getElementById("numChallenges").value, 10);
+	if (isNaN(num) || num < 1) return false;
+
+	// 3) if not chaos mode, category totals must match
+	if (!document.getElementById("chaosMode").checked) {
+		const totalReq = Object.values(categoryRequirements)
+							.reduce((a, b) => a + b, 0);
+		if (totalReq !== num) return false;
+	}
+
+	// 4) must have at least one command loaded
+	if (commands.length === 0) return false;
+
+	return true;
+	}
+
+	function updateStartButtonState() {
+	const btn = document.getElementById("startGameBtn");
+	if (isGameReady()) {
+		btn.classList.remove("hidden");
+	} else {
+		btn.classList.add("hidden");
+	}
+	}
+
 
   // --- Event listeners ---
   startGameBtn.addEventListener("click", startGame);
   submitScoreBtn.addEventListener("click", submitScore);
   failBtn.addEventListener("click", failChallenge);
   undoBtn.addEventListener("click", undoLastAction);
-  
+
+	// —————— Show/Hide “🎯 Let’s Play!” When Config Changes ——————
+
+	playerButtonsDiv.addEventListener("click", updateStartButtonState);
+	document.getElementById("numChallenges")
+			.addEventListener("input", updateStartButtonState);
+	document.getElementById("chaosMode")
+			.addEventListener("change", updateStartButtonState);
+
   // --- Modal summary ---
 	  document.getElementById("closeEndGameBtn").addEventListener("click", () => {
 	  document.getElementById("endGameModal").classList.add("hidden");
@@ -1354,11 +1398,11 @@ function startGame() {
 		: "Cancel";
 	});
 
-  document.getElementById("categoryFilter").addEventListener("change", renderCommands);
-	darkModeToggle.addEventListener("click", () => {
-	  document.body.classList.toggle("dark-mode");
-	  const isDark = document.body.classList.contains("dark-mode");
-	  localStorage.setItem("darkModeEnabled", isDark ? "true" : "false");
+	document.getElementById("categoryFilter").addEventListener("change", renderCommands);
+		darkModeToggle.addEventListener("click", () => {
+		document.body.classList.toggle("dark-mode");
+		const isDark = document.body.classList.contains("dark-mode");
+		localStorage.setItem("darkModeEnabled", isDark ? "true" : "false");
 	});
 	
 	document.getElementById("increaseChallengeBtn").addEventListener("click", () => {
@@ -1367,6 +1411,7 @@ function startGame() {
 	  if (val < 50) {
 		input.value = val + 1;
 		updateCategorySummary();
+		updateStartButtonState();
 	  }
 	});
 
@@ -1376,6 +1421,7 @@ function startGame() {
 	  if (val > 1) {
 		input.value = val - 1;
 		updateCategorySummary();
+		updateStartButtonState();
 	  }
 	});
 	
@@ -1420,10 +1466,10 @@ function startGame() {
 	  chaosInputPanel.style.display = isChaos ? "block" : "none";
 	});
 
-// Optional: apply visibility on page load
-if (chaosModeCheckbox.checked) {
-  categoryControlsSection.style.display = "none";
-}
+	// Optional: apply visibility on page load
+	if (chaosModeCheckbox.checked) {
+	categoryControlsSection.style.display = "none";
+	}
 
 	toggleCommandListBtn.addEventListener("click", () => {
 	  const isHidden = commandListDiv.style.display === "none";
@@ -1446,6 +1492,10 @@ if (chaosModeCheckbox.checked) {
 		? "Hide challenges"
 		: "Show challenges";
 	});
+
+	// whenever any ± buttons or number‐fields change in the category area
+	categoryInputsDiv.addEventListener("click", updateStartButtonState);
+	categoryInputsDiv.addEventListener("input", updateStartButtonState);
   
   // Update category summary when number of challenges changes
   document.getElementById("numChallenges").addEventListener("input", updateCategorySummary);
@@ -1564,23 +1614,26 @@ function renderScoringButtons(challengeText) {
 		updateScoreboard();  // refresh your UI if needed
 	  });
 
-  // Initial load from Firebase
-  loadPlayersFromFirebase();
-  loadCommandsFromFirebase().then(() => {
-  populateCategoryDropdown(); // fills filter dropdown
-  renderCommands();           // shows filtered challenge list
-	});
-  loadHistoryFromFirebase();
-  
- // Apply dark mode from localStorage on load
-	const darkPref = localStorage.getItem("darkModeEnabled");
-	if (darkPref === "true") {
-	  document.body.classList.add("dark-mode");
-	}
+	// Initial load from Firebase
+	loadPlayersFromFirebase();
+	loadCommandsFromFirebase().then(() => {
+	populateCategoryDropdown(); // fills filter dropdown
+	renderCommands();           // shows filtered challenge list
+		});
+	loadHistoryFromFirebase();
+	
+	// Apply dark mode from localStorage on load
+		const darkPref = localStorage.getItem("darkModeEnabled");
+		if (darkPref === "true") {
+		document.body.classList.add("dark-mode");
+		}
+
+	// Ensure correct button state on load
+	updateStartButtonState();
 
 </script>
-  <!-- Flash overlay for turn transitions -->
-  <div id="turnFlashOverlay" class="turn-flash" style="display: none;"></div>
+	<!-- Flash overlay for turn transitions -->
+	<div id="turnFlashOverlay" class="turn-flash" style="display: none;"></div>
   
 </body>
 </html>
