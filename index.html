@@ -394,6 +394,7 @@
 	font-size: 1em;
 	}
 
+	/* Score Pop Effects */
 	.score-pop {
 	position: fixed;
 	top: 50%;
@@ -411,6 +412,11 @@
 	.score-pop.show {
 	transform: translate(-50%, -50%) scale(1);
 	opacity: 1;
+	}
+
+	/* 🔴 FAIL effect */
+	.score-pop.fail {
+	color: #ff3333;
 	}
   </style>
 
@@ -1338,6 +1344,7 @@ function startGame() {
 	  renderHistory();
 
 	  showTurnFlash("fail");
+	  showScorePop(newScore, true);
 	  nextTurn();
 	}
 
@@ -1684,15 +1691,17 @@ function renderScoringButtons(challengeText) {
 	  return 0; // Default if unknown
 	}
 
-	function showScorePop(amount) {
-		const pop = document.getElementById("scorePop");
-		pop.textContent = `+${amount}`;
-		pop.classList.add("show");
+	function showScorePop(amount, isFail = false) {
+	const pop = document.getElementById("scorePop");
 
-		setTimeout(() => {
-			pop.classList.remove("show");
-		}, 600);
-		}
+	pop.textContent = isFail ? "FAIL" : `+${amount}`;
+	pop.className = "score-pop show" + (isFail ? " fail" : "");
+
+	setTimeout(() => {
+		pop.classList.remove("show");
+		pop.classList.remove("fail");
+	}, 600);
+	}
 	
 	// Fill and display the end-game modal
 	function showEndGameModal(sortedPlayers, winners) {
