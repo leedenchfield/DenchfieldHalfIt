@@ -876,7 +876,6 @@ function startGame() {
 		renderHistory();
 		showTurnFlash("success");
 		nextTurn();
-
   }
 
   // Handle fail challenge (half points rounded up, min 1, unless already 0)
@@ -1231,6 +1230,8 @@ function renderScoringButtons(challengeText) {
     scores = [base, base * 2, base * 3];
   } else if (text.includes("any") && base >= 1 && base <= 20) {
     scores = [base, base * 2, base * 3, base * 4, base * 5, base * 6, base * 7, base * 8, base * 9];
+  } else if (text.includes("shanghai") && base >= 1 && base <= 20) {
+    scores = [base * 6];
   } else if (text.includes("bullseye")) {
     scores = [50, 100, 150];
   } else if (text.includes("25")) {
@@ -1275,6 +1276,7 @@ function renderScoringButtons(challengeText) {
 
 	  if (text.includes("treble") && base >= 1 && base <= 20) return base * 9;
 	  if (text.includes("double") && base >= 1 && base <= 20) return base * 6;
+	  if (text.includes("shanghai") && base >= 1 && base <= 20) return base * 6;
 	  if (text.includes("big") || text.includes("small")) return base * 3;
 	  if (text.includes("bullseye")) return 150; // 3x 50
 	  if (text.includes("25")) return 75;  // 3x 25
