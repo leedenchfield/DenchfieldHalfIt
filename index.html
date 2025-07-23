@@ -1693,14 +1693,20 @@ function renderScoringButtons(challengeText) {
 
 	function showScorePop(amount, isFail = false) {
 	const pop = document.getElementById("scorePop");
-
 	pop.textContent = isFail ? "FAIL" : `+${amount}`;
 	pop.className = "score-pop show" + (isFail ? " fail" : "");
 
+	// Remove 'show' first
 	setTimeout(() => {
 		pop.classList.remove("show");
+	}, 600); // match the transition duration
+
+	// Remove 'fail' slightly later
+	if (isFail) {
+		setTimeout(() => {
 		pop.classList.remove("fail");
-	}, 600);
+		}, 800);
+	}
 	}
 	
 	// Fill and display the end-game modal
