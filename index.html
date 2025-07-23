@@ -393,6 +393,25 @@
 	.label-text {
 	font-size: 1em;
 	}
+
+	.score-pop {
+	position: fixed;
+	top: 50%;
+	left: 50%;
+	transform: translate(-50%, -50%) scale(0);
+	font-size: 4rem;
+	font-weight: bold;
+	color: #00ff99;
+	opacity: 0;
+	pointer-events: none;
+	z-index: 999;
+	transition: transform 0.3s ease, opacity 0.3s ease;
+	}
+
+	.score-pop.show {
+	transform: translate(-50%, -50%) scale(1);
+	opacity: 1;
+	}
   </style>
 
   <!-- Firebase libraries just adding this to force an update-->
@@ -1226,6 +1245,7 @@ function startGame() {
 		}
 
 		player.score += finalScore;
+		showScorePop(finalScore);
 		if (navigator.vibrate) navigator.vibrate(200); // 200ms buzz on success
 
 		// Increment streak
@@ -1663,6 +1683,16 @@ function renderScoringButtons(challengeText) {
 
 	  return 0; // Default if unknown
 	}
+
+	function showScorePop(amount) {
+		const pop = document.getElementById("scorePop");
+		pop.textContent = `+${amount}`;
+		pop.classList.add("show");
+
+		setTimeout(() => {
+			pop.classList.remove("show");
+		}, 600);
+		}
 	
 	// Fill and display the end-game modal
 	function showEndGameModal(sortedPlayers, winners) {
@@ -1711,6 +1741,7 @@ function renderScoringButtons(challengeText) {
 </script>
 	<!-- Flash overlay for turn transitions -->
 	<div id="turnFlashOverlay" class="turn-flash" style="display: none;"></div>
-  
+ 	<!-- Score Pop -->
+	<div id="scorePop" class="score-pop"></div>
 </body>
 </html>
