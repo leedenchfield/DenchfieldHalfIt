@@ -827,17 +827,23 @@ function startGame() {
 
 		if (isJoker && isDoubleTrouble) {
 		  finalScore *= 4;
+		    showScorePop(finalScore, false, "mega-combo");
 		  gameHistory.push(`🎭💥 MEGA COMBO! ${player.name} hit max score on a JOKER challenge — score QUADRUPLED to ${finalScore}!`);
 		} else if (isJoker) {
 		  finalScore *= 2;
+		  	showScorePop(finalScore, false, "joker");
 		  gameHistory.push(`🃏 JOKER! ${player.name} scored double points: ${finalScore}`);
 		} else if (isDoubleTrouble) {
 		  finalScore *= 2;
+		  	showScorePop(finalScore, false, "double-trouble");
 		  gameHistory.push(`💥 DOUBLE TROUBLE! ${player.name} hit the max and scored ${finalScore}`);
+		} else {
+		showScorePop(finalScore);
 		}
 
+
 		player.score += finalScore;
-		showScorePop(finalScore);
+		//showScorePop(finalScore);
 		if (navigator.vibrate) navigator.vibrate(200); // 200ms buzz on success
 
 		// Increment streak
@@ -846,6 +852,8 @@ function startGame() {
 
 		  if (playerStreaks[player.name] >= 3) {
 			player.score += 20;
+			scoreVal += 20; // Add bonus to scoreVal for history
+				showScorePop(20, false, "streak");
 			gameHistory.push(`🔥 STREAK BONUS! ${player.name} completed 3 in a row and earned +20 points`);
 			playerStreaks[player.name] = 0; // Reset streak
 		  }
@@ -889,12 +897,14 @@ function startGame() {
 
 	if (isHardcore) {
 	  newScore = 0;
+	  	showTurnFlash("explosion");
+	  	showScorePop(newScore, true, "hardcore");
 	  message = `🔥 ${player.name} hit a HARDCORE fail! Score reset to 0!`;
 	// 💥 Trigger explosion effect
-	  showTurnFlash("explosion");
 
 	} else if (isJoker) {
 	  newScore = Math.ceil(oldScore / 4) || 1;
+	  	showScorePop(newScore, true, "joker-fail");
 	  message = `🃏 ${player.name} hit the JOKER penalty! Score cut to ${newScore}!`;
 	} 
 
@@ -905,6 +915,7 @@ function startGame() {
 		} else {
 		  newScore = Math.max(1, Math.ceil(oldScore / 2));
 		}
+		showScorePop(newScore, true);
 		message = `${player.name} failed and score was halved to ${newScore}.`;
 	  }
 
@@ -930,7 +941,6 @@ function startGame() {
 	  renderHistory();
 
 	  showTurnFlash("fail");
-	  showScorePop(newScore, true);
 	  nextTurn();
 	}
 
@@ -1277,23 +1287,39 @@ function renderScoringButtons(challengeText) {
 	  return 0; // Default if unknown
 	}
 
-	function showScorePop(amount, isFail = false) {
+	function showScorePop(amount, isFail = false, type = "") {
 	const pop = document.getElementById("scorePop");
-	pop.textContent = isFail ? "FAIL" : `+${amount}`;
-	pop.className = "score-pop show" + (isFail ? " fail" : "");
 
-	// Remove 'show' first
+	// Set custom text per effect
+	if (type === "mega-combo") {
+		pop.textContent = `MEGA COMBO! +${amount}`;
+	} else if (type === "double-trouble") {
+		pop.textContent = `DOUBLE BUBBLE BONUS! +${amount}`;
+	} else if (type === "joker") {
+		pop.textContent = `JOKER! +${amount}`;
+	} else if (type === "joker-fail") {
+		pop.textContent = `JOKER PENALTY`;
+	} else if (type === "hardcore") {
+		pop.textContent = `💣 BOOM!`;
+	} else if (type === "streak") {
+		pop.textContent = `STREAK BONUS! +${amount}`;
+	} else {
+		// No specific type given — fallback to default
+		type = isFail ? "fail" : "";
+		pop.textContent = isFail ? "FAIL" : `+${amount}`;
+	}
+
+	// Apply only relevant classes
+	pop.className = `score-pop show ${type}`;
+
 	setTimeout(() => {
 		pop.classList.remove("show");
-	}, 600); // match the transition duration
+	}, 600);
 
-	// Remove 'fail' slightly later
-	if (isFail) {
-		setTimeout(() => {
-		pop.classList.remove("fail");
-		}, 800);
-	}
-	}
+	setTimeout(() => {
+		pop.className = "score-pop"; // full reset
+	}, 1200);
+}
 	
 	// Fill and display the end-game modal
 	function showEndGameModal(sortedPlayers, winners) {
