@@ -1261,6 +1261,10 @@ function renderScoringButtons(challengeText) {
     scores = [42, 67];
   } else if (text.includes("61")) {
     scores = [61];
+  } else if (text.includes("101")) {
+	scores = [101];
+  } else if (text.includes("maths")) {
+	scores = [50];
   } else {
     // Show manual input only
     scoreInput.style.display = "inline-block";
@@ -1302,6 +1306,12 @@ function renderScoringButtons(challengeText) {
 	  if (text.includes("split")) return 132;
 	  if (text.includes("bow")) return 67;
 	  if (text.includes("any") && base >= 1 && base <= 20) return base * 9;
+	  if (text.includes("101")) return 101;
+	  if (text.includes("fore")) return 180;
+	  if (text.includes("skipping")) return 180;
+	  if (text.includes("anything")) return 180;
+	  if (text.includes("grouping")) return 180;
+	  if (text.includes("maths")) return 50;
 
 	  return 0; // Default if unknown
 	}
