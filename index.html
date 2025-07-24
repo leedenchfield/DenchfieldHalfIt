@@ -1228,6 +1228,22 @@ function endGameEarly() {
 
 endGameBtn.addEventListener("click", endGameEarly);
 
+function isValidCheckoutScore(score) {
+  const excluded = new Set([159, 162, 163, 165, 166, 168, 169]);
+
+  const twoDartExtras = new Set([100, 101, 104, 107, 110]);
+  const threeDartExtras = new Set([
+    99, 101, 102, 103, 105, 106, 107, 108, 109
+  ]);
+
+  if (score >= 41 && score <= 98) return true;          // Two-dart range
+  if (twoDartExtras.has(score)) return true;            // Additional two-dart finishes
+  if (threeDartExtras.has(score)) return true;          // Extra three-dart finishes
+  if (score >= 111 && score <= 170 && !excluded.has(score)) return true;
+
+  return false;
+}
+
 function renderScoringButtons(challengeText) {
   const scoreInput = document.getElementById("scoreInput");
   const buttonsArea = document.getElementById("scoreButtonsArea");
@@ -1239,6 +1255,34 @@ function renderScoringButtons(challengeText) {
   const base = match ? parseInt(match[0], 10) : null;
   let scores = [];
 
+   // 🎯 Detect if this is a Checkout challenge
+  const isCheckout = text.includes("checkout");
+
+  if (isCheckout && base !== null) {
+	  if (!isValidCheckoutScore(base)) {
+      console.warn(`Invalid checkout score: ${base} is not permitted`);
+      scoreInput.style.display = "inline-block";
+      buttonsArea.style.display = "none";
+      submitScoreBtn.style.display = "inline-block";
+      return;
+    }
+
+    // ✅ Show single button
+    scoreInput.style.display = "none";
+    buttonsArea.style.display = "block";
+    submitScoreBtn.style.display = "none";
+
+    const btn = document.createElement("button");
+    btn.textContent = base;
+    btn.style.margin = "5px";
+    btn.onclick = () => {
+      scoreInput.value = base;
+      submitScore();
+    };
+    buttonsArea.appendChild(btn);
+    return;
+  }
+  // 🎯 Generate buttons based on challenge type
   if (text.includes("treble") && base >= 1 && base <= 20) {
     scores = [base * 3, base * 6, base * 9];
   } else if (text.includes("double") && base >= 1 && base <= 20) {
