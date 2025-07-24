@@ -331,11 +331,11 @@
 	margin-top: 10px;
 	}
 	.mode-toggle-row {
-	display: flex;
-	align-items: center;
-	justify-content: space-between;
-	gap: 12px;
-	margin-bottom: 12px;
+	display: inline-flex;       /* inline-flex keeps them on the same line */
+	align-items: center;        /* vertical align */
+	gap: 8px;                   /* space between toggle and control */
+	margin-bottom: 8px;         /* vertical spacing between rows */
+	white-space: nowrap;        /* prevent wrapping onto a new line */
 	}
 	.mode-toggle-row .inline-control-group {
 	margin-left: auto;
@@ -483,9 +483,9 @@
 	}
 	/* Match input height & tighten spacing */
 	.inline-control-group {
-	display: flex;
+	display: inline-flex;
 	align-items: center;
-	gap: 0; /* remove spacing between input and buttons */
+	gap: 0;                   /* tighten up the button-to-input gap */
 	}
 
 	.inline-control-group input[type="number"] {
@@ -508,3 +508,4 @@
 	background-color: #555;
 	color: white;
 }
+

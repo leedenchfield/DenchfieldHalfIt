@@ -74,6 +74,7 @@
 	   <summary><h2 style="display: inline; cursor: pointer;">🎲 Gameplay Modifiers</h2></summary>
 	  <div style="margin-top: 10px; padding-left: 10px;">
 		<div class="toggle-group">
+		<div class="mode-toggle-row">
 		<label class="switch-label">
 			<input type="checkbox" id="hardcoreMode" />
 			<span class="switch-slider"></span>
@@ -84,7 +85,9 @@
 		<input type="number" id="hardcoreChaosCount" min="0" value="1" />
 		<button id="increaseHardcoreRoundsBtn">+</button>
 		</div>
+		</div>
 
+		<div class="mode-toggle-row">
 		<label class="switch-label">
 			<input type="checkbox" id="jokerMode" />
 			<span class="switch-slider"></span>
@@ -94,6 +97,7 @@
 		<button id="decreaseJokerRoundsBtn">−</button>
 		<input type="number" id="jokerChaosCount" min="0" value="1" />
 		<button id="increaseJokerRoundsBtn">+</button>
+		</div>
 		</div>
 
 		<label class="switch-label">
