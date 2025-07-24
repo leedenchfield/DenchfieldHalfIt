@@ -344,7 +344,7 @@
 	align-items: center;        /* vertical align */
 	gap: 8px;                   /* space between toggle and control */
 	margin-bottom: 4px;         /* vertical spacing between rows */
-	white-space: nowrap;        /* prevent wrapping onto a new line */
+	/*white-space: nowrap;        /* prevent wrapping onto a new line */
 	}
 	.mode-toggle-row .inline-control-group {
 	margin-left: auto;
