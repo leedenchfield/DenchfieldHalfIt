@@ -330,12 +330,21 @@
 	gap: 12px;
 	margin-top: 10px;
 	}
-	.mode-toggle-row {
+	/* Make every row at least 40px tall and center its contents */
+	.toggle-group > * {
 	display: flex;
 	align-items: center;
-	justify-content: space-between;
-	gap: 12px;
-	margin-bottom: 12px;
+	min-height: 40px;  /* match your .mode-toggle-row height */
+	}
+
+	.mode-toggle-row {
+	position: relative;       /* so the controls can position absolutely */
+  	min-height: 40px;         /* match this to your switch’s actual height */
+	display: inline-flex;       /* inline-flex keeps them on the same line */
+	align-items: center;        /* vertical align */
+	gap: 8px;                   /* space between toggle and control */
+	margin-bottom: 4px;         /* vertical spacing between rows */
+	/*white-space: nowrap;        /* prevent wrapping onto a new line */
 	}
 	.mode-toggle-row .inline-control-group {
 	margin-left: auto;
@@ -483,9 +492,9 @@
 	}
 	/* Match input height & tighten spacing */
 	.inline-control-group {
-	display: flex;
+	display: inline-flex;
 	align-items: center;
-	gap: 0; /* remove spacing between input and buttons */
+	gap: 0;                   /* tighten up the button-to-input gap */
 	}
 
 	.inline-control-group input[type="number"] {
@@ -508,3 +517,4 @@
 	background-color: #555;
 	color: white;
 }
+

@@ -74,44 +74,48 @@
 	   <summary><h2 style="display: inline; cursor: pointer;">🎲 Gameplay Modifiers</h2></summary>
 	  <div style="margin-top: 10px; padding-left: 10px;">
 		<div class="toggle-group">
+		<div class="mode-toggle-row">
 		<label class="switch-label">
 			<input type="checkbox" id="hardcoreMode" />
 			<span class="switch-slider"></span>
-			<span class="label-text">🔥 Hardcore Mode</span>
+			<span class="label-text">🔥 Hardcore Mode - failing reduces score to 0</span>
 		</label>
 		<div id="hardcoreControlBox" class="inline-control-group hidden" style="margin-left: auto;">
 		<button id="decreaseHardcoreRoundsBtn">−</button>
 		<input type="number" id="hardcoreChaosCount" min="0" value="1" />
 		<button id="increaseHardcoreRoundsBtn">+</button>
 		</div>
+		</div>
 
+		<div class="mode-toggle-row">
 		<label class="switch-label">
 			<input type="checkbox" id="jokerMode" />
 			<span class="switch-slider"></span>
-			<span class="label-text">🃏 Joker Mode</span>
+			<span class="label-text">🃏 Joker Mode - succeed for x2 score, fail and your score is reduced by 3/4</span>
 		</label>
 		<div id="jokerControlBox" class="inline-control-group hidden" style="margin-left: auto;">
 		<button id="decreaseJokerRoundsBtn">−</button>
 		<input type="number" id="jokerChaosCount" min="0" value="1" />
 		<button id="increaseJokerRoundsBtn">+</button>
 		</div>
+		</div>
 
 		<label class="switch-label">
 			<input type="checkbox" id="doubleTroubleMode" />
 			<span class="switch-slider"></span>
-			<span class="label-text">💥 Double Trouble</span>
+			<span class="label-text">💥 Double Trouble - score max for visit and get x2 score</span>
 		</label>
 
 		<label class="switch-label">
 			<input type="checkbox" id="streakBonusMode" />
 			<span class="switch-slider"></span>
-			<span class="label-text">🔥 Streak Bonus</span>
+			<span class="label-text">🔥 Streak Bonus - 3 successful turns gets you +20 point bonus</span>
 		</label>
 
 		<label class="switch-label">
 			<input type="checkbox" id="chaosMode" />
 			<span class="switch-slider"></span>
-			<span class="label-text">🌀 Chaos Mode</span>
+			<span class="label-text">🌀 Chaos Mode - ignores category selections, chooses challenges from anywhere</span>
 		</label>
 		</div>
 		<br />
