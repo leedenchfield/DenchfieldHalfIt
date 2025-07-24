@@ -113,6 +113,12 @@
 		</label>
 
 		<label class="switch-label">
+			<input type="checkbox" id="driftMode" />
+			<span class="switch-slider"></span>
+			<span class="label-text">🌫️ Percentage Mode</span>
+		</label>
+
+		<label class="switch-label">
 			<input type="checkbox" id="chaosMode" />
 			<span class="switch-slider"></span>
 			<span class="label-text">🌀 Chaos Mode</span>
@@ -190,7 +196,7 @@
   let chaosModeEnabled = false;
   let jokerRounds = [];
   let hardcoreRounds = [];
-
+  let driftModeEnabled = false;
   let categoryRequirements = {}; // tracks how many challenges per category
 
   let currentGameChallenges = []; // challenges selected for this game (unique, random)
@@ -608,6 +614,7 @@ function startGame() {
   const useJoker = document.getElementById("jokerMode").checked;
   doubleTroubleEnabled = document.getElementById("doubleTroubleMode").checked;
   streakBonusEnabled = document.getElementById("streakBonusMode").checked;
+  driftModeEnabled = document.getElementById("driftMode").checked;
 
   // 🧼 Reset game state
   gameStarted = true;
@@ -903,30 +910,28 @@ function startGame() {
 	  // HARDCORE: wipe to zero
 		const isHardcore = hardcoreRounds.includes(currentChallengeIndex);
 		const isJoker    = jokerRounds.includes(currentChallengeIndex);
+		const isDrift = driftModeEnabled;
 
-	if (isHardcore) {
-	  newScore = 0;
-	  	showTurnFlash("explosion");
-	  	showScorePop(newScore, true, "hardcore");
-	  message = `🔥 ${player.name} hit a HARDCORE fail! Score reset to 0!`;
-	// 💥 Trigger explosion effect
-
-	} else if (isJoker) {
-	  newScore = Math.ceil(oldScore / 4) || 1;
-	  	showScorePop(newScore, true, "joker-fail");
-	  message = `🃏 ${player.name} hit the JOKER penalty! Score cut to ${newScore}!`;
-	} 
-
-	// NORMAL: half the score (min 1 unless already 0)
-	   else {
-		if (oldScore === 0) {
-		  newScore = 0;
+		if (isHardcore) {
+		newScore = 0;
+		showTurnFlash("explosion");
+		showScorePop(newScore, true, "hardcore");
+		message = `🔥 ${player.name} hit a HARDCORE fail! Score reset to 0!`;
+		} else if (isJoker) {
+		newScore = Math.ceil(oldScore / 4) || 1;
+		showScorePop(newScore, true, "joker-fail");
+		message = `🃏 ${player.name} hit the JOKER penalty! Score cut to ${newScore}!`;
+		} else if (isDrift) {
+		const percent = Math.floor(Math.random() * 41) + 25;
+		const penalty = Math.round(oldScore * (percent / 100));
+		newScore = Math.max(0, oldScore - penalty);
+		showScorePop(penalty, true, "drift-fail");
+		message = `🌫️ Percentage Penalty activated — ${player.name}'s score was reduced by ${percent}% to ${newScore}.`;
 		} else {
-		  newScore = Math.max(1, Math.ceil(oldScore / 2));
-		}
+		newScore = oldScore === 0 ? 0 : Math.max(1, Math.ceil(oldScore / 2));
 		showScorePop(newScore, true);
 		message = `${player.name} failed and score was halved to ${newScore}.`;
-	  }
+		}
 
 	  // Reset any streak
 	  if (streakBonusEnabled) {
@@ -942,7 +947,8 @@ function startGame() {
 		oldScore,
 		newScore,
 		challengeIndex: currentChallengeIndex,
-		oldStreak: playerStreaks[player.name]
+		oldStreak: playerStreaks[player.name],
+		driftPenalty: isDrift ? oldScore - newScore : null
 	  });
 
 	  // Push the custom message into history
@@ -974,6 +980,10 @@ function startGame() {
 	// Preserve streak bonus if it was set
 	if (streakBonusEnabled && last.oldStreak !== undefined) {
 	playerStreaks[last.playerName] = last.oldStreak;
+	}
+	// Reset drift penalty if it was set
+	if (last.driftPenalty !== null) {
+  	gameHistory.push(`↩️ Percentage penalty of ${last.driftPenalty} was undone.`);
 	}
 
     // Remove last history entry
@@ -1365,7 +1375,7 @@ function renderScoringButtons(challengeText) {
 	  return 0; // Default if unknown
 	}
 
-	function showScorePop(amount, isFail = false, type = "") {
+	function showScorePop(amount, isFail = false, type = "", extra = "") {
 	const pop = document.getElementById("scorePop");
 
 	// Set custom text per effect
@@ -1381,7 +1391,10 @@ function renderScoringButtons(challengeText) {
 		pop.textContent = `💣 BOOM!`;
 	} else if (type === "streak") {
 		pop.textContent = `STREAK BONUS! +${amount}`;
-	} else {
+	} else if (type === "drift-fail") {
+		pop.textContent = `PERCENTAGE PENALTY! -${amount}`;
+	}
+	else {
 		// No specific type given — fallback to default
 		type = isFail ? "fail" : "";
 		pop.textContent = isFail ? "FAIL" : `+${amount}`;
