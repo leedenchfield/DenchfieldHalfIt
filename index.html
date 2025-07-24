@@ -60,7 +60,7 @@
 
   <!-- Game setup controls -->
   <section id="gameControls">
-	<div id="challengeCountControl" style="display: flex; align-items: center; gap: 10px;">
+	<div id="challengeCountControl" class="inline-control-group">
 	  <label for="numChallenges" style="min-width: 180px;"><strong>Challenges per Game:</strong></label>
 	  <button id="decreaseChallengeBtn">−</button>
 	  <input type="number" inputmode="numeric" id="numChallenges" min="1" max="50" value="10" style="width: 60px;" />
@@ -68,7 +68,7 @@
 	</div>
     <label>
       Starting Score (optional, default 0):
-	<input type="number" inputmode="numeric" id="startingScore" min="0" value="0" />
+	<input type="number" inputmode="numeric" id="startingScore" min="0" max ="500" value="0" />
     </label>
 	<details id="specialRulesPanel">
 	   <summary><h2 style="display: inline; cursor: pointer;">🎲 Gameplay Modifiers</h2></summary>
@@ -106,19 +106,20 @@
 		</div>
 		<br />
 		<div id="chaosCountInputs" style="display: none; margin-top: 10px;">
-		  <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
+		<div class="inline-control-group" style="margin-bottom: 10px;">
 			<label for="jokerChaosCount" style="min-width: 180px;"><strong>Joker Rounds in Chaos:</strong></label>
 			<button id="decreaseJokerRoundsBtn">−</button>
-			<input type="number" id="jokerChaosCount" min="0" value="1" style="width: 60px;" />
+			<input type="number" id="jokerChaosCount" min="0" value="1" />
 			<button id="increaseJokerRoundsBtn">+</button>
-		  </div>
+		</div>
 
-		  <div style="display: flex; align-items: center; gap: 10px;">
+		<div class="inline-control-group">
 			<label for="hardcoreChaosCount" style="min-width: 180px;"><strong>Hardcore Rounds in Chaos:</strong></label>
 			<button id="decreaseHardcoreRoundsBtn">−</button>
-			<input type="number" id="hardcoreChaosCount" min="0" value="1" style="width: 60px;" />
+			<input type="number" id="hardcoreChaosCount" min="0" value="1" />
 			<button id="increaseHardcoreRoundsBtn">+</button>
-		  </div>
+		</div>
+		</div>
 		</div>
 	  </div>
 	</details>
@@ -422,6 +423,10 @@
 		  editBtn.onclick = () => {
 			const newName = prompt("Edit player name:", p.name);
 			if (!newName || newName.trim() === p.name) return;
+			  if (newName.length > 20) {
+			alert("Player name must be 20 characters or fewer.");
+			return;
+			}
 			if (players.some(pl => pl.name === newName.trim())) {
 			  alert("Player name already exists!");
 			  return;
@@ -528,6 +533,7 @@
   function addPlayer() {
     const name = newPlayerNameInput.value.trim();
     if (!name) return alert("Player name cannot be empty");
+	if (name.length > 20) return alert("Player name must be 20 characters or fewer");
     if (players.some(p => p.name === name)) return alert("Player name already exists");
     players.push({ name, score: 0 });
     newPlayerNameInput.value = "";
