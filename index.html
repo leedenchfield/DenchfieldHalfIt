@@ -881,7 +881,8 @@ function startGame() {
 		  newScore: player.score,
 		  challengeIndex: currentChallengeIndex,
 		  playerName: player.name,
-		  scoreAdded: scoreVal
+		  scoreAdded: scoreVal,
+		  oldStreak: playerStreaks[player.name]
 		});
 
 		// ✔ Log to history
@@ -940,7 +941,8 @@ function startGame() {
 		playerIndex: currentPlayerIndex,
 		oldScore,
 		newScore,
-		challengeIndex: currentChallengeIndex
+		challengeIndex: currentChallengeIndex,
+		oldStreak: playerStreaks[player.name]
 	  });
 
 	  // Push the custom message into history
@@ -961,7 +963,6 @@ function startGame() {
 
 	  const last = lastActionsStack.pop();
 
-
     // Revert player score
     activePlayers[last.playerIndex].score = last.oldScore;
 
@@ -970,6 +971,10 @@ function startGame() {
       currentChallengeIndex = last.challengeIndex;
       currentPlayerIndex = last.playerIndex;
     }
+	// Preserve streak bonus if it was set
+	if (streakBonusEnabled && last.oldStreak !== undefined) {
+	playerStreaks[last.playerName] = last.oldStreak;
+	}
 
     // Remove last history entry
     if (gameHistory.length > 0) gameHistory.pop();
