@@ -330,11 +330,20 @@
 	gap: 12px;
 	margin-top: 10px;
 	}
+	/* Make every row at least 40px tall and center its contents */
+	.toggle-group > * {
+	display: flex;
+	align-items: center;
+	min-height: 40px;  /* match your .mode-toggle-row height */
+	}
+
 	.mode-toggle-row {
+	position: relative;       /* so the controls can position absolutely */
+  	min-height: 40px;         /* match this to your switch’s actual height */
 	display: inline-flex;       /* inline-flex keeps them on the same line */
 	align-items: center;        /* vertical align */
 	gap: 8px;                   /* space between toggle and control */
-	margin-bottom: 8px;         /* vertical spacing between rows */
+	margin-bottom: 4px;         /* vertical spacing between rows */
 	white-space: nowrap;        /* prevent wrapping onto a new line */
 	}
 	.mode-toggle-row .inline-control-group {
