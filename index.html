@@ -79,12 +79,22 @@
 			<span class="switch-slider"></span>
 			<span class="label-text">🔥 Hardcore Mode</span>
 		</label>
+		<div id="hardcoreControlBox" class="inline-control-group hidden" style="margin-left: auto;">
+		<button id="decreaseHardcoreRoundsBtn">−</button>
+		<input type="number" id="hardcoreChaosCount" min="0" value="1" />
+		<button id="increaseHardcoreRoundsBtn">+</button>
+		</div>
 
 		<label class="switch-label">
 			<input type="checkbox" id="jokerMode" />
 			<span class="switch-slider"></span>
 			<span class="label-text">🃏 Joker Mode</span>
 		</label>
+		<div id="jokerControlBox" class="inline-control-group hidden" style="margin-left: auto;">
+		<button id="decreaseJokerRoundsBtn">−</button>
+		<input type="number" id="jokerChaosCount" min="0" value="1" />
+		<button id="increaseJokerRoundsBtn">+</button>
+		</div>
 
 		<label class="switch-label">
 			<input type="checkbox" id="doubleTroubleMode" />
@@ -105,22 +115,6 @@
 		</label>
 		</div>
 		<br />
-		<div id="chaosCountInputs" style="display: none; margin-top: 10px;">
-		<div class="inline-control-group" style="margin-bottom: 10px;">
-			<label for="jokerChaosCount" style="min-width: 180px;"><strong>Joker Rounds in Chaos:</strong></label>
-			<button id="decreaseJokerRoundsBtn">−</button>
-			<input type="number" id="jokerChaosCount" min="0" value="1" />
-			<button id="increaseJokerRoundsBtn">+</button>
-		</div>
-
-		<div class="inline-control-group">
-			<label for="hardcoreChaosCount" style="min-width: 180px;"><strong>Hardcore Rounds in Chaos:</strong></label>
-			<button id="decreaseHardcoreRoundsBtn">−</button>
-			<input type="number" id="hardcoreChaosCount" min="0" value="1" />
-			<button id="increaseHardcoreRoundsBtn">+</button>
-		</div>
-		</div>
-		</div>
 	  </div>
 	</details>
   </section>
@@ -186,8 +180,6 @@
   let commands = [];
   let selectedPlayers = new Set();
   let gameStarted = false;
-  let hardcoreChallengeIndex = null;
-  let jokerChallengeIndex = null;
   let doubleTroubleEnabled = false;
   let streakBonusEnabled = false;
   let playerStreaks = {};
@@ -603,8 +595,6 @@ function startGame() {
 	document.getElementById("setupContainer").style.display = "none";
 
   // ✅ Reinitialize modifier indexes for this session
-  hardcoreChallengeIndex = null;
-  jokerChallengeIndex = null;
   jokerRounds = [];
   hardcoreRounds = [];
 
@@ -728,19 +718,39 @@ function startGame() {
     currentGameChallenges = [firstChallenge, ...middleChallenges, lastChallenge];
 
     // 🎭 Joker and Hardcore assignment
-    hardcoreChallengeIndex = null;
-    jokerChallengeIndex = null;
+	// 🎯 Read desired round counts
+	const hardcoreCount = useHardcore
+	? parseInt(document.getElementById("hardcoreChaosCount").value, 10) || 0
+	: 0;
+	const jokerCount = useJoker
+	? parseInt(document.getElementById("jokerChaosCount").value, 10) || 0
+	: 0;
 
-    const eligibleIndexes = currentGameChallenges.map((_, i) => i).filter(i => i !== 0 && i !== currentGameChallenges.length - 1);
+	// ✅ Reset modifier arrays
+	hardcoreRounds = [];
+	jokerRounds = [];
 
-    if (useHardcore && eligibleIndexes.length > 0) {
-      hardcoreChallengeIndex = eligibleIndexes[Math.floor(Math.random() * eligibleIndexes.length)];
-    }
+	const eligibleIndexes = currentGameChallenges
+	.map((_, i) => i)
+	.filter(i => i !== 0 && i !== currentGameChallenges.length - 1);
 
-    if (useJoker && eligibleIndexes.length > 1) {
-      const jokerEligible = eligibleIndexes.filter(i => i !== hardcoreChallengeIndex);
-      jokerChallengeIndex = jokerEligible[Math.floor(Math.random() * jokerEligible.length)];
-    }
+	// 🔥 Assign Hardcore rounds
+	for (let i = 0; i < hardcoreCount && eligibleIndexes.length > 0; i++) {
+	const index = eligibleIndexes.splice(
+		Math.floor(Math.random() * eligibleIndexes.length),
+		1
+	)[0];
+	hardcoreRounds.push(index);
+	}
+
+	// 🃏 Assign Joker rounds
+	for (let i = 0; i < jokerCount && eligibleIndexes.length > 0; i++) {
+	const index = eligibleIndexes.splice(
+		Math.floor(Math.random() * eligibleIndexes.length),
+		1
+	)[0];
+	jokerRounds.push(index);
+	}
   }
 
   // 🚀 Start the game
@@ -788,13 +798,8 @@ function startGame() {
 	  const totalChallenges = chaosModeEnabled ? chaosTurnLimit : currentGameChallenges.length;
 
 	  const modifiers = [];
-		const isHardcore = chaosModeEnabled
-		  ? hardcoreRounds.includes(currentChallengeIndex)
-		  : currentChallengeIndex === hardcoreChallengeIndex;
-
-		const isJoker = chaosModeEnabled
-		  ? jokerRounds.includes(currentChallengeIndex)
-		  : currentChallengeIndex === jokerChallengeIndex;
+		const isHardcore = hardcoreRounds.includes(currentChallengeIndex);
+		const isJoker    = jokerRounds.includes(currentChallengeIndex);
 
 		if (isHardcore) modifiers.push("🔥 HARDCORE");
 		if (isJoker) modifiers.push("🃏 JOKER");
@@ -825,9 +830,8 @@ function startGame() {
     // Check for Joker challenge
 		let finalScore = scoreVal;
 		const challengeText = currentGameChallenges[currentChallengeIndex]?.text || "";
-		const isJoker = chaosModeEnabled
-		  ? jokerRounds.includes(currentChallengeIndex)
-		  : currentChallengeIndex === jokerChallengeIndex;
+		const isHardcore = hardcoreRounds.includes(currentChallengeIndex);
+		const isJoker    = jokerRounds.includes(currentChallengeIndex);
 		const isDoubleTrouble = doubleTroubleEnabled &&
 		  scoreVal === getMaxPossibleScoreForChallenge(challengeText);
 
@@ -892,13 +896,8 @@ function startGame() {
 	  let newScore, message;
 
 	  // HARDCORE: wipe to zero
-		const isHardcore = chaosModeEnabled
-		  ? hardcoreRounds.includes(currentChallengeIndex)
-		  : currentChallengeIndex === hardcoreChallengeIndex;
-
-		const isJoker = chaosModeEnabled
-		  ? jokerRounds.includes(currentChallengeIndex)
-		  : currentChallengeIndex === jokerChallengeIndex;
+		const isHardcore = hardcoreRounds.includes(currentChallengeIndex);
+		const isJoker    = jokerRounds.includes(currentChallengeIndex);
 
 	if (isHardcore) {
 	  newScore = 0;
@@ -1166,9 +1165,17 @@ function startGame() {
 	chaosModeCheckbox.addEventListener("change", () => {
 	  const isChaos = chaosModeCheckbox.checked;
 	  categoryControlsSection.style.display = isChaos ? "none" : "block";
+	});
 
-	  const chaosInputPanel = document.getElementById("chaosCountInputs");
-	  chaosInputPanel.style.display = isChaos ? "block" : "none";
+	// Toggle Hardcore and Joker control boxes
+	document.getElementById("hardcoreMode").addEventListener("change", e => {
+	document.getElementById("hardcoreControlBox")
+			.classList.toggle("hidden", !e.target.checked);
+	});
+
+	document.getElementById("jokerMode").addEventListener("change", e => {
+	document.getElementById("jokerControlBox")
+			.classList.toggle("hidden", !e.target.checked);
 	});
 
 	// Optional: apply visibility on page load
