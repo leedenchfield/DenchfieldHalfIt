@@ -45,6 +45,13 @@
 	  <input id="newCommandText" placeholder="New challenge text" />
 	  <input id="newCommandDesc" placeholder="Optional description" />
 	  <input id="newCommandCate" placeholder="Category" />
+
+		<!-- New Child-Safe Checkbox -->
+		<label style="margin-left: 5px;">
+			<input type="checkbox" id="newCommandSafe" />
+			Child-safe
+		</label>
+
 	  <button onclick="addCommand()">Add Challenge</button>
 	</div>
 
@@ -636,43 +643,61 @@ document
   // --- Challenge management ---
 
 	function addCommand() {
-	  const text = document.getElementById("newCommandText").value.trim();
-	  const description = document.getElementById("newCommandDesc").value.trim();
-	  const category = document.getElementById("newCommandCate").value.trim() || "general";
+	const text        = document.getElementById("newCommandText").value.trim();
+	const description = document.getElementById("newCommandDesc").value.trim();
+	const category    = document.getElementById("newCommandCate").value.trim() || "general";
+	const childSafe   = document.getElementById("newCommandSafe").checked; 
 
-	  if (!text) return alert("Challenge text cannot be empty");
+	if (!text) return alert("Challenge text cannot be empty");
 
-	  db.collection("commands").add({ text, description, category }).then(() => {
+	db.collection("commands")
+		.add({ 
+		text, 
+		description, 
+		category, 
+		childsafe: childSafe   // <-- store the boolean flag
+		})
+		.then(() => {
+		// reload / re-render
 		loadCommandsFromFirebase().then(() => {
-		  populateCategoryDropdown();
-		  renderCommands();
+			populateCategoryDropdown();
+			renderCommands();
 		});
 
-		// Clear fields
+		// clear the form
 		document.getElementById("newCommandText").value = "";
 		document.getElementById("newCommandDesc").value = "";
 		document.getElementById("newCommandCate").value = "";
+		document.getElementById("newCommandSafe").checked = false;
 
-		// Hide form again
+		// hide form
 		document.getElementById("addChallengeForm").style.display = "none";
 		document.getElementById("showAddChallengeBtn").textContent = "Add New Challenge";
-	  });
+		});
 	}
 
-  function editCommand(cmd) {
-    const newText = prompt("Edit challenge text:", cmd.text);
-    if (newText === null) return;
-    const newDesc = prompt("Edit challenge description:", cmd.description);
-    if (newDesc === null) return;
-    const newCat = prompt("Edit challenge category:", cmd.category);
-    if (newCat === null) return;
-    
-    db.collection("commands").doc(cmd.id).set({ 
-      text: newText.trim(), 
-      description: newDesc.trim(), 
-      category: newCat.trim() || "general" 
-    }).then(loadCommandsFromFirebase);
-  }
+	function editCommand(cmd) {
+	const newText     = prompt("Edit challenge text:", cmd.text);
+	if (newText === null) return;
+
+	const newDesc     = prompt("Edit challenge description:", cmd.description);
+	if (newDesc === null) return;
+
+	const newCat      = prompt("Edit challenge category:", cmd.category);
+	if (newCat === null) return;
+
+	// Prompt for child-safe
+	const safeAns     = prompt("Is this child-safe? (yes / no):", cmd.childsafe ? "yes" : "no");
+	if (safeAns === null) return;
+	const newSafe     = safeAns.trim().toLowerCase().startsWith("y");
+
+	db.collection("commands").doc(cmd.id).set({
+		text:        newText.trim(),
+		description: newDesc.trim(),
+		category:    newCat.trim() || "general",
+		childsafe:   newSafe
+	}).then(loadCommandsFromFirebase);
+	}
 
   function deleteCommand(id) {
     if (confirm("Delete this challenge?")) {
