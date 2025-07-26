@@ -341,13 +341,24 @@
 		minusBtn.textContent = "−";
 		minusBtn.style.marginRight = "5px";
 		minusBtn.onclick = () => {
-		  const current = categoryRequirements[category] || 0;
-		  if (current > 0) {
+		// current count in the box
+		const current = categoryRequirements[category] || 0;
+
+		if (current > 0) {
+			// just decrement as before
 			categoryRequirements[category] = current - 1;
-			input.value = categoryRequirements[category];
-			updateCategorySummary();
-			updateStartButtonState();
-		  }
+		} else {
+			// at zero: jump to max available in that category
+			const available = getFilteredCommands()
+			.filter(cmd => cmd.category === category)
+			.length;
+			categoryRequirements[category] = available;
+		}
+
+		// reflect it in the UI + recalc everything
+		input.value = categoryRequirements[category];
+		updateCategorySummary();
+		updateStartButtonState();
 		};
 
 		// Input field
@@ -369,10 +380,25 @@
 		plusBtn.textContent = "+";
 		plusBtn.style.marginLeft = "5px";
 		plusBtn.onclick = () => {
-		  categoryRequirements[category] = (categoryRequirements[category] || 0) + 1;
-		  input.value = categoryRequirements[category];
-		  updateCategorySummary();
-		  updateStartButtonState();
+		// 1. How many challenges currently fit this category + filters
+		const available = getFilteredCommands()
+			.filter(cmd => cmd.category === category)
+			.length;
+
+		// 2. What’s the current count (default 0)
+		const current = categoryRequirements[category] || 0;
+
+		// 3. Wrap logic: +1 if below max, otherwise back to 0
+		if (current < available) {
+			categoryRequirements[category] = current + 1;
+		} else {
+			categoryRequirements[category] = 0;
+		}
+
+		// 4. Push UI update and revalidate
+		input.value = categoryRequirements[category];
+		updateCategorySummary();
+		updateStartButtonState();
 		};
 
 		div.appendChild(label);
