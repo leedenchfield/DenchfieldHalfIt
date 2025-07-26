@@ -1233,13 +1233,22 @@ function startGame() {
   
 const endGameBtn = document.getElementById("endGameBtn");
 
-function endGameEarly() {
-  if (!gameStarted) {
-    alert("No game is currently running.");
-    return;
-  }
-  endGame();
-}
+	function endGameEarly() {
+	  if (!gameStarted) {
+	    alert("No game is currently running.");
+	    return;
+	  }
+	
+	  // ask for confirmation before ending
+	  const reallyEnd = confirm(
+	    "Are you sure you want to end the game now? This cannot be undone."
+	  );
+	  if (!reallyEnd) return;
+	
+	  endGame();
+	}
+ 
+ endGameBtn.addEventListener("click", endGameEarly);
 
 endGameBtn.addEventListener("click", endGameEarly);
 
