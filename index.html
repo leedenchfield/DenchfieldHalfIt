@@ -74,11 +74,6 @@
 	   <summary><h2 style="display: inline; cursor: pointer;">🎲 Gameplay Modifiers</h2></summary>
 	  <div style="margin-top: 10px; padding-left: 10px;">
 		<div class="toggle-group">
-			<label class="switch-label">
-			<input type="checkbox" id="childSafeMode" />
-			<span class="switch-slider"></span>
-			<span class="label-text">🧒 Child-Safe Mode</span>
-			</label>
 		<div class="mode-toggle-row">
 		<label class="switch-label">
 			<input type="checkbox" id="hardcoreMode" />
@@ -203,7 +198,7 @@
   let hardcoreRounds = [];
   let driftModeEnabled = false;
   let categoryRequirements = {}; // tracks how many challenges per category
-  let childSafeModeEnabled = false;
+
   let currentGameChallenges = []; // challenges selected for this game (unique, random)
   let currentChallengeIndex = 0;
   let currentPlayerIndex = 0;
@@ -270,24 +265,10 @@
     return db.collection("commands").get().then(snapshot => {
       commands = [];
       commandListDiv.innerHTML = "";
-		snapshot.forEach(doc => {
-		const d = doc.data();
-		const raw = d.childsafe;
-		const isSafe = 
-			typeof raw === "boolean"
-			? raw
-			: String(raw || "")
-				.trim()
-				.toLowerCase() === "true";
-
-		commands.push({
-			id:          doc.id,
-			text:        d.text,
-			description: d.description || "",
-			category:    d.category || "general",
-			childsafe:   isSafe
-		});
-		});
+      snapshot.forEach(doc => {
+        const d = doc.data();
+        commands.push({ id: doc.id, text: d.text, description: d.description || "", category: d.category || "general" });
+      });
       renderCommands();
       updateCategoryControls();
     });
@@ -305,12 +286,6 @@
 	  });
 	}
 
-	function refreshUI() {
-	updateCategoryControls();
-	updateCategorySummary();
-	updateStartButtonState();
-	renderCommands();
-	}
 
   function loadHistoryFromFirebase() {
     return db.collection("gameData").doc("history").get().then(doc => {
@@ -386,45 +361,30 @@
 	  updateStartButtonState();
 	}
 
-	function updateCategorySummary() {
-	// 1) How many we “need” in total
-	const totalRequired = Object
-		.values(categoryRequirements)
-		.reduce((sum, val) => sum + val, 0);
-
-	// 2) How many the user’s set in the “numChallenges” input
-	const numChallenges = parseInt(
-		document.getElementById("numChallenges").value, 10
-	) || 0;
-
-	// 3) Read the Child-Safe toggle, then filter the full commands pool
-	const childSafeOn = document.getElementById("childSafeMode").checked;
-	const filteredCommands = commands.filter(cmd =>
-		!childSafeOn    // if SafeMode is off, keep all…
-		|| cmd.childsafe  // …otherwise only those flagged childsafe = true
-	);
-
-	// 4) Build the base summary text
-	let summary = `Total selected: ${totalRequired} / ${numChallenges} challenges`;
-
-	// 5) Per-category availability checks
-	const issues = [];
-	for (const [category, required] of Object.entries(categoryRequirements)) {
-		const available = filteredCommands
-		.filter(cmd => cmd.category === category).length;
-		if (available < required) {
-		issues.push(`${category}: need ${required}, have ${available}`);
-		}
-	}
-
-	// 6) Append any shortfalls
-	if (issues.length) {
-		summary += ` | Issues: ${issues.join(", ")}`;
-	}
-
-	// 7) Flush it to the page
-	document.getElementById("categorySummary").textContent = summary;
-	}
+  function updateCategorySummary() {
+    const total = Object.values(categoryRequirements).reduce((sum, val) => sum + val, 0);
+    const numChallenges = parseInt(document.getElementById("numChallenges").value) || 0;
+    
+    let summary = `Total selected: ${total} / ${numChallenges} challenges`;
+    
+    // Check availability
+    const categories = Object.keys(categoryRequirements);
+    const availabilityIssues = [];
+    
+    categories.forEach(category => {
+      const required = categoryRequirements[category] || 0;
+      const available = commands.filter(c => c.category === category).length;
+      if (required > available) {
+        availabilityIssues.push(`${category}: need ${required}, have ${available}`);
+      }
+    });
+    
+    if (availabilityIssues.length > 0) {
+      summary += ` | Issues: ${availabilityIssues.join(", ")}`;
+    }
+    
+    categorySummaryDiv.textContent = summary;
+  }
 
   // --- Render Functions ---
 
@@ -518,30 +478,17 @@
 	}
 
 	function renderCommands() {
-	// 1) Read the current Child-Safe Mode state
-	const childSafeMode = document.getElementById("childSafeMode").checked;
+	  commandListDiv.innerHTML = "";
+	  const selectedCategory = document.getElementById("categoryFilter").value;
 
-	// 2) Build a source list: either all commands or only safe ones
-	const source = childSafeMode
-		? commands.filter(cmd => cmd.childsafe)     // only those flagged true
-		: commands.slice();                         // full copy of commands
+	  const filteredCommands = selectedCategory
+		? commands.filter(cmd => cmd.category === selectedCategory)
+		: commands;
 
-	// 3) Further filter by the selected category
-	const selectedCategory = document.getElementById("categoryFilter").value;
-	const filtered = selectedCategory
-		? source.filter(cmd => cmd.category === selectedCategory)
-		: source;
-
-	// 4) Render
-	commandListDiv.innerHTML = "";
-	filtered.forEach(cmd => {
+	  filteredCommands.forEach(cmd => {
 		const div = document.createElement("div");
 		div.className = "commandItem";
-		div.innerHTML = `
-		<strong>${cmd.text}</strong><br/>
-		<em>${cmd.description}</em><br/>
-		<small>Category: ${cmd.category}</small>
-		`;
+		div.innerHTML = `<strong>${cmd.text}</strong><br/><em>${cmd.description}</em><br/><small>Category: ${cmd.category}</small>`;
 
 		const editBtn = document.createElement("button");
 		editBtn.className = "edit-btn";
@@ -555,20 +502,9 @@
 
 		div.appendChild(editBtn);
 		div.appendChild(deleteBtn);
-
 		commandListDiv.appendChild(div);
-	});
+	  });
 	}
-
-// Re-run renderCommands() whenever Child-Safe Mode toggles:
-document
-  .getElementById("childSafeMode")
-  .addEventListener("change", renderCommands);
-
-// Also re-render when the category dropdown changes:
-document
-  .getElementById("categoryFilter")
-  .addEventListener("change", renderCommands);
 
 	function updateScoreboard() {
 	  scoreList.innerHTML = "";
@@ -668,14 +604,6 @@ function startGame() {
   // ✅ Hide non game content when game is started
 	document.getElementById("setupContainer").style.display = "none";
 
-  // ✅ is child safe mode active?
-	childSafeModeEnabled = document.getElementById("childSafeMode").checked;
-
-	// 2) build one pool of only‐safe or all‐commands
-	const filteredCommands = commands.filter(c =>
-	!childSafeModeEnabled || c.childsafe
-	);
-
   // ✅ Reinitialize modifier indexes for this session
   jokerRounds = [];
   hardcoreRounds = [];
@@ -762,15 +690,15 @@ function startGame() {
 
     for (const category in categoryRequirements) {
       const required = categoryRequirements[category];
-      const available = filteredCommands.filter(c => c.category === category).length;
+      const available = commands.filter(c => c.category === category).length;
       if (required > available) {
         return alert(`Not enough ${category} challenges available. Need ${required}, have ${available}`);
       }
     }
 
     // 🎲 Select challenges
-    const scoringChallenges = filteredCommands.filter(c => c.category === "scoring");
-    const finishingChallenges = filteredCommands.filter(c => c.category === "finishing");
+    const scoringChallenges = commands.filter(c => c.category === "scoring");
+    const finishingChallenges = commands.filter(c => c.category === "finishing");
 
     const firstChallenge = scoringChallenges[Math.floor(Math.random() * scoringChallenges.length)];
     const lastChallenge = finishingChallenges[Math.floor(Math.random() * finishingChallenges.length)];
@@ -783,7 +711,7 @@ function startGame() {
       if (category === "finishing") required -= 1;
 
       if (required > 0) {
-        const available = filteredCommands.filter(c =>
+        const available = commands.filter(c =>
           c.category === category &&
           c.id !== firstChallenge.id &&
           c.id !== lastChallenge.id
@@ -866,7 +794,7 @@ function startGame() {
 	  let challenge;
 
 	  if (chaosModeEnabled) {
-		const pool = [...filteredCommands];
+		const pool = [...commands];
 		if (pool.length === 0) {
 		  currentChallengeText.textContent = "⚠️ No challenges available!";
 		  return;
@@ -1269,26 +1197,6 @@ function startGame() {
 			.classList.toggle("hidden", !e.target.checked);
 	});
 
-	const childSafeCheckbox = document.getElementById("childSafeMode");
-	childSafeCheckbox.addEventListener("change", () => {
-	// update category controls (which rely on commands[])
-	updateCategoryControls();
-
-	// recalc summary (uses filtered pool inside it)
-	updateCategorySummary();
-
-	// show/hide “Start Game” button
-	updateStartButtonState();
-
-	// refresh the list panel
-	renderCommands();
-	});
-
-	childSafeCheckbox.addEventListener("change",   refreshUI);
-	categoryFilter   .addEventListener("change",   refreshUI);
-	refreshUI();
-
-
 	// Optional: apply visibility on page load
 	if (chaosModeCheckbox.checked) {
 	categoryControlsSection.style.display = "none";
@@ -1341,29 +1249,6 @@ const endGameBtn = document.getElementById("endGameBtn");
 	}
  
  endGameBtn.addEventListener("click", endGameEarly);
-
-	/**
-	 * Returns the array of commands after applying Child-Safe and category filters
-	 */
-	function getFilteredCommands() {
-	const childSafeOn = document.getElementById("childSafeMode").checked;
-	const category   = document.getElementById("categoryFilter").value;
-
-	// start from full pool
-	let pool = commands.slice();
-
-	// 1) Child-Safe filter
-	if (childSafeOn) {
-		pool = pool.filter(cmd => cmd.childsafe);
-	}
-
-	// 2) Category filter
-	if (category) {
-		pool = pool.filter(cmd => cmd.category === category);
-	}
-
-	return pool;
-	}
 
 endGameBtn.addEventListener("click", endGameEarly);
 
