@@ -221,6 +221,11 @@
   let currentChallengeIndex = 0;
   let currentPlayerIndex = 0;
   let lastActionsStack = []; // undo stack
+  	// lastActionsStack entries: {
+	//   playerIndex, oldScore, oldStreak,
+	//   prevPlayerIndex, prevChallengeIndex,
+	//   historyLength
+	// }
   let gameHistory = [];
 
   // UI Elements
@@ -964,15 +969,26 @@ function startGame() {
 	function submitScore() {
 	const confirmSubmit = confirm("Submit this score?");
 	if (!confirmSubmit) return;
-    if (!gameStarted) return;
-    const val = scoreInput.value.trim();
-    if (val === "") return alert("Please enter a score");
-    let scoreVal = parseInt(val, 10);
-    if (isNaN(scoreVal) || scoreVal < 0) return alert("Score must be a non-negative number");
+	if (!gameStarted) return;
+	const val = scoreInput.value.trim();
+	if (!val) return alert("Please enter a score");
+	let scoreVal = parseInt(val, 10);
+	if (isNaN(scoreVal) || scoreVal < 0) return alert("Score must be non-negative");
 
-    const player = activePlayers[currentPlayerIndex];
-    const oldScore = player.score;
-	
+	// ── SNAPSHOT before any changes:
+	const player = activePlayers[currentPlayerIndex];
+	const oldScore = player.score;
+	const oldStreak = playerStreaks[player.name];
+	const snapshot = {
+		playerIndex: currentPlayerIndex,
+		oldScore,
+		oldStreak,
+		prevPlayerIndex: currentPlayerIndex,
+		prevChallengeIndex: currentChallengeIndex,
+		historyLength: gameHistory.length
+	};
+
+
     // Check for Joker challenge
 		let finalScore = scoreVal;
 		const challengeText = currentGameChallenges[currentChallengeIndex]?.text || "";
@@ -1015,125 +1031,110 @@ function startGame() {
 		  }
 		}
 
-		// ✔ Save action for undo
-		lastActionsStack.push({
-		  type: "score",
-		  playerIndex: currentPlayerIndex,
-		  oldScore: oldScore,
-		  newScore: player.score,
-		  challengeIndex: currentChallengeIndex,
-		  playerName: player.name,
-		  scoreAdded: scoreVal,
-		  oldStreak: playerStreaks[player.name]
-		});
-
 		// ✔ Log to history
 		gameHistory.push(`${player.name} scored ${scoreVal} on challenge "${currentGameChallenges[currentChallengeIndex].text}" (Total: ${player.score})`);
+		// ── PUSH SNAPSHOT to undo stack ──
+		lastActionsStack.push(snapshot);
 		saveHistoryToFirebase();
 		renderHistory();
 		showTurnFlash("success");
 		nextTurn();
-  }
+		}
 
   // Handle fail challenge (half points rounded up, min 1, unless already 0)
 	function failChallenge() {
 	const confirmFail = confirm("Fail Challenge?");
 	if (!confirmFail) return;
-	  if (!gameStarted) return;
-	  const player = activePlayers[currentPlayerIndex];
-	  const oldScore = player.score;
-	  let newScore, message;
+	if (!gameStarted) return;
 
-	  // HARDCORE: wipe to zero
-		const isHardcore = hardcoreRounds.includes(currentChallengeIndex);
-		const isJoker    = jokerRounds.includes(currentChallengeIndex);
-		const isDrift = driftModeEnabled;
+	const player = activePlayers[currentPlayerIndex];
 
-		if (isHardcore) {
+	// Re-introduce oldScore and oldStreak locally
+	const oldScore = player.score;
+	const oldStreak = playerStreaks[player.name];
+
+	// 📸 Build your snapshot
+	const snapshot = {
+		playerIndex:        currentPlayerIndex,
+		oldScore:           oldScore,
+		oldStreak:          oldStreak,
+		prevPlayerIndex:    currentPlayerIndex,
+		prevChallengeIndex: currentChallengeIndex,
+		historyLength:      gameHistory.length
+	};
+
+	let newScore, message;
+
+	// Now the rest of your fail logic can safely use oldScore…
+	const isHardcore = hardcoreRounds.includes(currentChallengeIndex);
+	const isJoker    = jokerRounds.includes(currentChallengeIndex);
+	const isDrift    = driftModeEnabled;
+
+	if (isHardcore) {
 		newScore = 0;
 		showTurnFlash("explosion");
 		showScorePop(newScore, true, "hardcore");
 		message = `🔥 ${player.name} hit a HARDCORE fail! Score reset to 0!`;
-		} else if (isJoker) {
+
+	} else if (isJoker) {
 		newScore = Math.ceil(oldScore / 4) || 1;
 		showScorePop(newScore, true, "joker-fail");
 		message = `🃏 ${player.name} hit the JOKER penalty! Score cut to ${newScore}!`;
-		} else if (isDrift) {
+
+	} else if (isDrift) {
 		const percent = Math.floor(Math.random() * 41) + 25;
 		const penalty = Math.round(oldScore * (percent / 100));
 		newScore = Math.max(0, oldScore - penalty);
-
-		// show the percent instead of raw amount
 		showScorePop(`${percent}%`, true, "drift-fail");
+		message = `🌫️ Percentage Penalty — ${player.name}'s score reduced by ${percent}% to ${newScore}.`;
 
-		message = `🌫️ Percentage Penalty activated — ${player.name}'s score was reduced by ${percent}% to ${newScore}.`;
-		} else {
+	} else {
 		newScore = oldScore === 0 ? 0 : Math.max(1, Math.ceil(oldScore / 2));
 		showScorePop(newScore, true);
 		message = `${player.name} failed and score was halved to ${newScore}.`;
-		}
+	}
 
-	  // Reset any streak
-	  if (streakBonusEnabled) {
-		playerStreaks[player.name] = 0;
-	  }
+	// Reset streak if needed
+	if (streakBonusEnabled) playerStreaks[player.name] = 0;
 
-	  // Apply and record
-	  player.score = newScore;
-	  if (navigator.vibrate) navigator.vibrate([100, 50, 100]); // double-pulse pattern
-	  lastActionsStack.push({
-		type: "fail",
-		playerIndex: currentPlayerIndex,
-		oldScore,
-		newScore,
-		challengeIndex: currentChallengeIndex,
-		oldStreak: playerStreaks[player.name],
-		driftPenalty: isDrift ? oldScore - newScore : null
-	  });
+	// Apply score change and log history
+	player.score = newScore;
+	if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
+	gameHistory.push(message);
 
-	  // Push the custom message into history
-	  gameHistory.push(message);
-	  saveHistoryToFirebase();
-	  renderHistory();
+	// ── ONLY this snapshot goes on the stack ──
+	lastActionsStack.push(snapshot);
 
-	  showTurnFlash("fail");
-	  nextTurn();
+	saveHistoryToFirebase();
+	renderHistory();
+	showTurnFlash("fail");
+	nextTurn();
 	}
 
   // Undo last action
 	function undoLastAction() {
-	  if (lastActionsStack.length === 0) return alert("No actions to undo");
+	if (lastActionsStack.length === 0) return alert("No actions to undo");
+	if (!confirm("Undo last action?")) return;
 
-	  const confirmUndo = confirm("Are you sure you want to undo the last action?");
-	  if (!confirmUndo) return;
+	const snap = lastActionsStack.pop();
 
-	  const last = lastActionsStack.pop();
+	// 1) Restore turn indices
+	currentPlayerIndex   = snap.prevPlayerIndex;
+	currentChallengeIndex = snap.prevChallengeIndex;
 
-    // Revert player score
-    activePlayers[last.playerIndex].score = last.oldScore;
+	// 2) Restore player score & streak
+	activePlayers[snap.playerIndex].score = snap.oldScore;
+	playerStreaks[ activePlayers[snap.playerIndex].name ] = snap.oldStreak;
 
-    // If we already advanced challenge/player index, revert them as needed
-    if (currentChallengeIndex > last.challengeIndex) {
-      currentChallengeIndex = last.challengeIndex;
-      currentPlayerIndex = last.playerIndex;
-    }
-	// Preserve streak bonus if it was set
-	if (streakBonusEnabled && last.oldStreak !== undefined) {
-	playerStreaks[last.playerName] = last.oldStreak;
+	// 3) Trim history
+	gameHistory.length = snap.historyLength;
+
+	// 4) Re-render everything
+	saveHistoryToFirebase();
+	renderHistory();
+	updateScoreboard();
+	updateTurnDisplay();
 	}
-	// Reset drift penalty if it was set
-	if (last.driftPenalty !== null) {
-  	gameHistory.push(`↩️ Percentage penalty of ${last.driftPenalty} was undone.`);
-	}
-
-    // Remove last history entry
-    if (gameHistory.length > 0) gameHistory.pop();
-
-    saveHistoryToFirebase();
-    renderHistory();
-    updateScoreboard();
-    updateTurnDisplay();
-  }
 
   // Advance turn and challenge index properly
 	function nextTurn() {
