@@ -961,7 +961,9 @@ function startGame() {
 	}
 
   // Handle submitting score for current player/challenge
-  function submitScore() {
+	function submitScore() {
+	const confirmSubmit = confirm("Submit this score?");
+	if (!confirmSubmit) return;
     if (!gameStarted) return;
     const val = scoreInput.value.trim();
     if (val === "") return alert("Please enter a score");
@@ -1034,7 +1036,9 @@ function startGame() {
   }
 
   // Handle fail challenge (half points rounded up, min 1, unless already 0)
-	  function failChallenge() {
+	function failChallenge() {
+	const confirmFail = confirm("Are you sure you want to mark this challenge as failed?");
+	if (!confirmFail) return;
 	  if (!gameStarted) return;
 	  const player = activePlayers[currentPlayerIndex];
 	  const oldScore = player.score;
