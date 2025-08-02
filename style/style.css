@@ -537,4 +537,10 @@
 	padding: 14px 24px;
 	border-radius: 6px;
 	}
+	#undoWrapper {
+	max-width: 600px; /* Match your game area */
+	margin: 0 auto;    /* Center it horizontally */
+	padding: 10px;
+	text-align: center;
+	}
 
