@@ -1051,7 +1051,10 @@ function startGame() {
 		const percent = Math.floor(Math.random() * 41) + 25;
 		const penalty = Math.round(oldScore * (percent / 100));
 		newScore = Math.max(0, oldScore - penalty);
-		showScorePop(penalty, true, "drift-fail");
+
+		// show the percent instead of raw amount
+		showScorePop(`${percent}%`, true, "drift-fail");
+
 		message = `🌫️ Percentage Penalty activated — ${player.name}'s score was reduced by ${percent}% to ${newScore}.`;
 		} else {
 		newScore = oldScore === 0 ? 0 : Math.max(1, Math.ceil(oldScore / 2));
