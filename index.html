@@ -1519,6 +1519,8 @@ function renderScoringButtons(challengeText) {
 	scores = [101];
   } else if (text.includes("maths")) {
 	scores = [50];
+  } else if (text.includes("unconventional")) {
+	scores = [26];
   } else {
     // Show manual input only
     scoreInput.style.display = "inline-block";
@@ -1567,6 +1569,7 @@ function renderScoringButtons(challengeText) {
 	  if (text.includes("anything")) return 180;
 	  if (text.includes("grouping")) return 180;
 	  if (text.includes("maths")) return 50;
+	  if (text.includes("unconventional")) return 26;
 
 	  return 0; // Default if unknown
 	}
