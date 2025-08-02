@@ -165,9 +165,15 @@
     <div id="gameActionButtons">
       <button id="submitScoreBtn">Submit Score</button>
       <button class="fail-btn">Fail Challenge</button>
-      <button class="undo-btn">Undo Last Action</button>
     </div>
   </section>
+
+  <!-- Undo area -->
+	<section id="undo" class="hidden">
+		<div id="undoWrapper">
+			<button class="undo-btn">Undo Last Action</button>
+		</div>
+	</section>
 
   <!-- Scoreboard -->
   <section id="scoreboard" class="hidden">
@@ -889,6 +895,7 @@ function startGame() {
 
   // 🚀 Start the game
 	gameArea.classList.remove("hidden");
+	document.getElementById("undo").classList.remove("hidden");
 	document.getElementById("scoreboard").classList.remove("hidden");
 	document.getElementById("historyArea").classList.remove("hidden");
 	updatePlayerButtons();
@@ -1170,6 +1177,7 @@ function startGame() {
 	    // hide play UI
 		gameArea.classList.add("hidden");
 		document.getElementById("scoreboard").classList.add("hidden");
+		document.getElementById("undo").classList.add("hidden");
 		document.getElementById("historyArea").classList.add("hidden");
 		// show setup UI
 	  	document.getElementById("setupContainer").style.display = "block";
