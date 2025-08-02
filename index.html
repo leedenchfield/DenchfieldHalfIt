@@ -1470,6 +1470,7 @@ function renderScoringButtons(challengeText) {
 
     const btn = document.createElement("button");
     btn.textContent = base;
+	btn.classList.add("dynamic-btn");
     btn.style.margin = "5px";
     btn.onclick = () => {
       scoreInput.value = base;
@@ -1521,6 +1522,7 @@ function renderScoringButtons(challengeText) {
   scores.forEach(score => {
     const btn = document.createElement("button");
     btn.textContent = score;
+	btn.classList.add("dynamic-btn");
     btn.style.margin = "5px";
     btn.onclick = () => {
       scoreInput.value = score;

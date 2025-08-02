@@ -122,6 +122,14 @@
     #scoreboard li {
       margin-bottom: 5px;
     }
+	#scoreboard li {
+	font-size: 2.4em;        /* Increase individual player scores */
+	line-height: 2em;      /* Adds comfortable spacing */
+	}
+	#scoreboard h3 {
+	font-size: 2em;          /* Scoreboard header like "Scores" */
+	margin-bottom: 10px;
+	}
     #historyArea {
       background: #efe;
       max-height: 200px;
@@ -137,13 +145,13 @@
       font-size: 0.9em;
     }
     .fail-btn, .undo-btn, #submitScoreBtn, #startGameBtn {
-      padding: 10px 20px;
+      padding: 14px 26px;
       margin-top: 10px;
       cursor: pointer;
       border: none;
       border-radius: 5px;
       font-weight: bold;
-      font-size: 1em;
+      font-size: 1.4em;
     }
     .fail-btn {
       background-color: #d32f2f;
@@ -524,4 +532,9 @@
 	background-color: #555;
 	color: white;
 }
+	.dynamic-btn {
+	font-size: 2em;
+	padding: 14px 24px;
+	border-radius: 6px;
+	}
 
