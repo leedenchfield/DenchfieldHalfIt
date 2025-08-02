@@ -1037,7 +1037,7 @@ function startGame() {
 
   // Handle fail challenge (half points rounded up, min 1, unless already 0)
 	function failChallenge() {
-	const confirmFail = confirm("Are you sure you want to mark this challenge as failed?");
+	const confirmFail = confirm("Fail Challenge?");
 	if (!confirmFail) return;
 	  if (!gameStarted) return;
 	  const player = activePlayers[currentPlayerIndex];
