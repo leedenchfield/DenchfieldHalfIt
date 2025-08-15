@@ -311,6 +311,27 @@
 	  }
 	}
 
+	// ─── Weighted buckets for “Menzies the N” ───
+	const menziesBuckets = [
+	{ min: 41, max: 60,  weight: 40 },
+	{ min: 61, max: 80,  weight: 25 },
+	{ min: 81, max: 100,  weight: 20 },
+	{ min: 101, max: 140,  weight: 10 },
+	{ min: 141, max: 179,  weight:  5 }
+	];
+
+	function pickWeightedRandom(buckets) {
+	const total = buckets.reduce((sum, b) => sum + b.weight, 0);
+	let r = Math.random() * total;
+	for (const { min, max, weight } of buckets) {
+		if (r < weight) {
+		return Math.floor(Math.random() * (max - min + 1)) + min;
+		}
+		r -= weight;
+	}
+	return buckets[buckets.length - 1].min;
+	}
+
 
   function loadCommandsFromFirebase() {
     return db.collection("commands").get().then(snapshot => {
@@ -945,59 +966,76 @@ function startGame() {
 
   // Display whose turn it is and current challenge
 	function updateTurnDisplay() {
-	  if (!gameStarted) {
-		currentTurnInfo.textContent = "";
-		currentChallengeText.textContent = "";
-		return;
-	  }
+  if (!gameStarted) {
+    currentTurnInfo.textContent = "";
+    currentChallengeText.textContent = "";
+    return;
+  }
 
-	  const isChaosEnd = chaosModeEnabled && currentChallengeIndex >= chaosTurnLimit;
-	  const isNormalEnd = !chaosModeEnabled && currentChallengeIndex >= currentGameChallenges.length;
+  // Check end‐of‐game
+  const isChaosEnd = chaosModeEnabled && currentChallengeIndex >= chaosTurnLimit;
+  const isNormalEnd = !chaosModeEnabled && currentChallengeIndex >= currentGameChallenges.length;
+  if (isChaosEnd || isNormalEnd) {
+    endGame();
+    return;
+  }
 
-	  if (isChaosEnd || isNormalEnd) {
-		endGame();
-		return;
-	  }
+  // Determine current player and challenge
+  const player = activePlayers[currentPlayerIndex];
+  let challenge;
+  let displayText;
 
-	  const player = activePlayers[currentPlayerIndex];
-	  let challenge;
+  if (chaosModeEnabled) {
+    // Chaos picks randomly each turn
+    const pool = commands.filter(c => !childSafeModeEnabled || c.childsafe);
+    if (!pool.length) {
+      currentChallengeText.textContent = "⚠️ No challenges available!";
+      return;
+    }
+    challenge   = pool[Math.floor(Math.random() * pool.length)];
+    displayText = challenge.text;
 
-		if (chaosModeEnabled) {
-			const pool = commands.filter(c =>
-			!childSafeModeEnabled || c.childsafe
-			);
+    // Save that random pick for history
+    currentGameChallenges[currentChallengeIndex] = challenge;
 
-		if (pool.length === 0) {
-		  currentChallengeText.textContent = "⚠️ No challenges available!";
-		  return;
-		}
-		challenge = pool[Math.floor(Math.random() * pool.length)];
-		currentGameChallenges[currentChallengeIndex] = challenge; // save for history
-	  } else {
-		challenge = currentGameChallenges[currentChallengeIndex];
-	  }
+  } else {
+    // Pre-selected list mode
+    challenge   = currentGameChallenges[currentChallengeIndex];
+    displayText = challenge.text;
 
-	  const challengeNumber = currentChallengeIndex + 1;
-	  const totalChallenges = chaosModeEnabled ? chaosTurnLimit : currentGameChallenges.length;
+    // Menzies special case
+    if (challenge.text === "Menzies") {
+      // Only generate once per challenge
+      if (!challenge.generatedNumber) {
+        challenge.generatedNumber = pickWeightedRandom(menziesBuckets);
+      }
+      displayText = `Menzies ${challenge.generatedNumber}`;
+    }
+  }
 
-	  const modifiers = [];
-		const isHardcore = hardcoreRounds.includes(currentChallengeIndex);
-		const isJoker    = jokerRounds.includes(currentChallengeIndex);
+  // Build UI text
+  const challengeNumber  = currentChallengeIndex + 1;
+  const totalChallenges  = chaosModeEnabled ? chaosTurnLimit : currentGameChallenges.length;
+  const modifiers        = [];
+  if (hardcoreRounds.includes(currentChallengeIndex)) modifiers.push("🔥 HARDCORE");
+  if (jokerRounds   .includes(currentChallengeIndex)) modifiers.push("🃏 JOKER");
+  const extra = modifiers.length ? ` [${modifiers.join(" + ")}]` : "";
 
-		if (isHardcore) modifiers.push("🔥 HARDCORE");
-		if (isJoker) modifiers.push("🃏 JOKER");
+  // Render to DOM
+  currentTurnInfo.textContent    = `Current Turn: ${player.name}`;
+  currentChallengeText.textContent =
+    `Challenge ${challengeNumber} of ${totalChallenges}: ` +
+    `"${displayText}" (${challenge.description || "No description"})${extra}`;
 
-	  const extra = modifiers.length > 0 ? ` [${modifiers.join(" + ")}]` : "";
+  // Prepare scoring UI
+  renderScoringButtons(challenge.text);
+  scoreInput.value = "";
+  scoreInput.focus();
 
-	  currentTurnInfo.textContent = `Current Turn: ${player.name}`;
-	  currentChallengeText.textContent = `Challenge ${challengeNumber} of ${totalChallenges}: "${challenge.text}" (${challenge.description})${extra}`;
-
-	  renderScoringButtons(challenge.text);
-	  scoreInput.value = "";
-	  scoreInput.focus();
-	  updatePlayerButtons();
-	  updateScoreboard();
-	}
+  // Refresh the rest of the UI
+  updatePlayerButtons();
+  updateScoreboard();
+}
 
   // Handle submitting score for current player/challenge
 	function submitScore() {
