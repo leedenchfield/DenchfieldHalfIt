@@ -8,6 +8,7 @@
 
   <!-- Firebase libraries just adding this to force an update-->
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 </head>
 <body>
@@ -135,6 +136,13 @@
 			<span class="switch-slider"></span>
 			<span class="label-text">🌀 Chaos Mode</span>
 		</label>
+
+		<label class="switch-label">
+		<input type="checkbox" id="funOnlyMode" />
+		<span class="switch-slider"></span>
+		<span class="label-text">🎉 Fun Only Mode</span>
+		</label>
+
 		</div>
 		<br />
 	  </div>
@@ -200,7 +208,26 @@
     measurementId: "G-ZQQM5PNWPV"
   };
   firebase.initializeApp(firebaseConfig);
-  const db = firebase.firestore();
+
+	// 🔐 Anonymous Auth
+	firebase.auth().signInAnonymously()
+	.then(() => {
+		console.log("✅ Signed in anonymously");
+	})
+	.catch(error => {
+		console.error("❌ Anonymous sign-in error:", error.message);
+	});
+
+	firebase.auth().onAuthStateChanged(user => {
+	if (user) {
+		console.log("👤 Authenticated user ID:", user.uid);
+		// Safe to proceed with Firestore access
+	}
+	});
+
+	// Firestore reference
+	const db = firebase.firestore();
+
 
   // State
   let players = [];
@@ -215,6 +242,7 @@
   let jokerRounds = [];
   let hardcoreRounds = [];
   let driftModeEnabled = false;
+  let funOnlyModeEnabled = false;
   let categoryRequirements = {}; // tracks how many challenges per category
   let childSafeModeEnabled = false;
   let currentGameChallenges = []; // challenges selected for this game (unique, random)
@@ -726,51 +754,43 @@ function startGame() {
   const startScore = parseInt(document.getElementById("startingScore").value, 10);
 
   if (isNaN(startScore) || startScore < 0) return alert("Starting score must be 0 or more");
-  
-  // ✅ Hide non game content when game is started
-	document.getElementById("setupContainer").style.display = "none";
 
-  // ✅ is child safe mode active?
-	childSafeModeEnabled = document.getElementById("childSafeMode").checked;
+  document.getElementById("setupContainer").style.display = "none";
 
-	// 2) build one pool of only‐safe or all‐commands
-	const filteredCommands = commands.filter(c =>
-	!childSafeModeEnabled || c.childsafe
-	);
+  childSafeModeEnabled = document.getElementById("childSafeMode").checked;
 
-  // ✅ Reinitialize modifier indexes for this session
+  let filteredCommands = commands.filter(c =>
+    !childSafeModeEnabled || c.childsafe
+  );
+
   jokerRounds = [];
   hardcoreRounds = [];
 
-  // 🌪 Chaos Mode flag and extra mode flags
   chaosModeEnabled = document.getElementById("chaosMode").checked;
   const useHardcore = document.getElementById("hardcoreMode").checked;
   const useJoker = document.getElementById("jokerMode").checked;
   doubleTroubleEnabled = document.getElementById("doubleTroubleMode").checked;
   streakBonusEnabled = document.getElementById("streakBonusMode").checked;
   driftModeEnabled = document.getElementById("driftMode").checked;
+  funOnlyModeEnabled = document.getElementById("funOnlyMode").checked;
 
-  // 🧼 Reset game state
   gameStarted = true;
   currentChallengeIndex = 0;
   currentPlayerIndex = 0;
   lastActionsStack = [];
   gameHistory = [];
 
-  // 👥 Set up player scores for this round, but keep the full roster
-	  players.forEach(p => {
-		if (selectedPlayers.has(p.name)) {
-		  p.score = startScore;
-		} else {
-		  delete p.score;      // unselected players have no score property
-		}
-	  });
+  players.forEach(p => {
+    if (selectedPlayers.has(p.name)) {
+      p.score = startScore;
+    } else {
+      delete p.score;
+    }
+  });
 
-  // Build the list of active players and shuffle turn order
   activePlayers = players.filter(p => selectedPlayers.has(p.name));
   shuffleArray(activePlayers);
 
-  // Reset streaks only for active players
   playerStreaks = {};
   activePlayers.forEach(p => {
     playerStreaks[p.name] = 0;
@@ -778,39 +798,66 @@ function startGame() {
 
   currentGameChallenges = [];
 
-	// 💣 Chaos Mode skips challenge setup
-	if (chaosModeEnabled) {
-	  // 🔗 Set chaos turn limit
-	  chaosTurnLimit = isNaN(numChallenges) || numChallenges < 1 ? 10 : numChallenges;
+  if (chaosModeEnabled) {
+    chaosTurnLimit = isNaN(numChallenges) || numChallenges < 1 ? 10 : numChallenges;
 
-	  // 🎯 Get desired round counts
+    const hardcoreChaosCount = useHardcore
+      ? parseInt(document.getElementById("hardcoreChaosCount").value, 10) || 0
+      : 0;
 
-	const hardcoreChaosCount = useHardcore
-	  ? parseInt(document.getElementById("hardcoreChaosCount").value, 10) || 0
-	  : 0;
+    const jokerChaosCount = useJoker
+      ? parseInt(document.getElementById("jokerChaosCount").value, 10) || 0
+      : 0;
 
-	const jokerChaosCount = useJoker
-	  ? parseInt(document.getElementById("jokerChaosCount").value, 10) || 0
-	  : 0;
+    const eligibleIndexes = Array.from({ length: chaosTurnLimit }, (_, i) => i);
+    jokerRounds = [];
+    hardcoreRounds = [];
 
-	  // 🎲 Generate eligible turn indexes
-	  const eligibleIndexes = Array.from({ length: chaosTurnLimit }, (_, i) => i);
-	  jokerRounds = [];
-	  hardcoreRounds = [];
+    for (let i = 0; i < hardcoreChaosCount && eligibleIndexes.length > 0; i++) {
+      const index = eligibleIndexes.splice(Math.floor(Math.random() * eligibleIndexes.length), 1)[0];
+      hardcoreRounds.push(index);
+    }
 
-	  // 🔥 Assign Hardcore rounds
-	  for (let i = 0; i < hardcoreChaosCount && eligibleIndexes.length > 0; i++) {
-		const index = eligibleIndexes.splice(Math.floor(Math.random() * eligibleIndexes.length), 1)[0];
-		hardcoreRounds.push(index);
-	  }
+    for (let i = 0; i < jokerChaosCount && eligibleIndexes.length > 0; i++) {
+      const index = eligibleIndexes.splice(Math.floor(Math.random() * eligibleIndexes.length), 1)[0];
+      jokerRounds.push(index);
+    }
 
-	  // 🃏 Assign Joker rounds (avoid overlap)
-	  for (let i = 0; i < jokerChaosCount && eligibleIndexes.length > 0; i++) {
-		const index = eligibleIndexes.splice(Math.floor(Math.random() * eligibleIndexes.length), 1)[0];
-		jokerRounds.push(index);
-	  }
-	} else {
-    // 📋 Validate category requirements
+  } else if (funOnlyModeEnabled) {
+    const funChallenges = filteredCommands.filter(c => c.category === "fun");
+
+    if (funChallenges.length < numChallenges) {
+      return alert(`Not enough 'fun' challenges available. Need ${numChallenges}, have ${funChallenges.length}`);
+    }
+
+    shuffleArray(funChallenges);
+    currentGameChallenges = funChallenges.slice(0, numChallenges);
+
+    const hardcoreCount = useHardcore
+      ? parseInt(document.getElementById("hardcoreChaosCount").value, 10) || 0
+      : 0;
+    const jokerCount = useJoker
+      ? parseInt(document.getElementById("jokerChaosCount").value, 10) || 0
+      : 0;
+
+    const eligibleIndexes = currentGameChallenges
+      .map((_, i) => i)
+      .filter(i => i !== 0 && i !== currentGameChallenges.length - 1);
+
+    hardcoreRounds = [];
+    jokerRounds = [];
+
+    for (let i = 0; i < hardcoreCount && eligibleIndexes.length > 0; i++) {
+      const index = eligibleIndexes.splice(Math.floor(Math.random() * eligibleIndexes.length), 1)[0];
+      hardcoreRounds.push(index);
+    }
+
+    for (let i = 0; i < jokerCount && eligibleIndexes.length > 0; i++) {
+      const index = eligibleIndexes.splice(Math.floor(Math.random() * eligibleIndexes.length), 1)[0];
+      jokerRounds.push(index);
+    }
+
+  } else {
     const totalRequired = Object.values(categoryRequirements).reduce((sum, val) => sum + val, 0);
     if (totalRequired !== numChallenges) {
       return alert(`Category totals (${totalRequired}) must equal number of challenges (${numChallenges})`);
@@ -830,7 +877,6 @@ function startGame() {
       }
     }
 
-    // 🎲 Select challenges
     const scoringChallenges = filteredCommands.filter(c => c.category === "scoring");
     const finishingChallenges = filteredCommands.filter(c => c.category === "finishing");
 
@@ -862,51 +908,39 @@ function startGame() {
     shuffleArray(middleChallenges);
     currentGameChallenges = [firstChallenge, ...middleChallenges, lastChallenge];
 
-    // 🎭 Joker and Hardcore assignment
-	// 🎯 Read desired round counts
-	const hardcoreCount = useHardcore
-	? parseInt(document.getElementById("hardcoreChaosCount").value, 10) || 0
-	: 0;
-	const jokerCount = useJoker
-	? parseInt(document.getElementById("jokerChaosCount").value, 10) || 0
-	: 0;
+    const hardcoreCount = useHardcore
+      ? parseInt(document.getElementById("hardcoreChaosCount").value, 10) || 0
+      : 0;
+    const jokerCount = useJoker
+      ? parseInt(document.getElementById("jokerChaosCount").value, 10) || 0
+      : 0;
 
-	// ✅ Reset modifier arrays
-	hardcoreRounds = [];
-	jokerRounds = [];
+    hardcoreRounds = [];
+    jokerRounds = [];
 
-	const eligibleIndexes = currentGameChallenges
-	.map((_, i) => i)
-	.filter(i => i !== 0 && i !== currentGameChallenges.length - 1);
+    const eligibleIndexes = currentGameChallenges
+      .map((_, i) => i)
+      .filter(i => i !== 0 && i !== currentGameChallenges.length - 1);
 
-	// 🔥 Assign Hardcore rounds
-	for (let i = 0; i < hardcoreCount && eligibleIndexes.length > 0; i++) {
-	const index = eligibleIndexes.splice(
-		Math.floor(Math.random() * eligibleIndexes.length),
-		1
-	)[0];
-	hardcoreRounds.push(index);
-	}
+    for (let i = 0; i < hardcoreCount && eligibleIndexes.length > 0; i++) {
+      const index = eligibleIndexes.splice(Math.floor(Math.random() * eligibleIndexes.length), 1)[0];
+      hardcoreRounds.push(index);
+    }
 
-	// 🃏 Assign Joker rounds
-	for (let i = 0; i < jokerCount && eligibleIndexes.length > 0; i++) {
-	const index = eligibleIndexes.splice(
-		Math.floor(Math.random() * eligibleIndexes.length),
-		1
-	)[0];
-	jokerRounds.push(index);
-	}
+    for (let i = 0; i < jokerCount && eligibleIndexes.length > 0; i++) {
+      const index = eligibleIndexes.splice(Math.floor(Math.random() * eligibleIndexes.length), 1)[0];
+      jokerRounds.push(index);
+    }
   }
 
-  // 🚀 Start the game
-	gameArea.classList.remove("hidden");
-	document.getElementById("undo").classList.remove("hidden");
-	document.getElementById("scoreboard").classList.remove("hidden");
-	document.getElementById("historyArea").classList.remove("hidden");
-	updatePlayerButtons();
-	updateScoreboard();
-	renderHistory();
-	updateTurnDisplay();
+  gameArea.classList.remove("hidden");
+  document.getElementById("undo").classList.remove("hidden");
+  document.getElementById("scoreboard").classList.remove("hidden");
+  document.getElementById("historyArea").classList.remove("hidden");
+  updatePlayerButtons();
+  updateScoreboard();
+  renderHistory();
+  updateTurnDisplay();
 }
 
   // Display whose turn it is and current challenge
@@ -1638,13 +1672,25 @@ function renderScoringButtons(challengeText) {
 		updateScoreboard();  // refresh your UI if needed
 	  });
 
-	// Initial load from Firebase
-	loadPlayersFromFirebase();
-	loadCommandsFromFirebase().then(() => {
-	populateCategoryDropdown(); // fills filter dropdown
-	renderCommands();           // shows filtered challenge list
-		});
-	loadHistoryFromFirebase();
+	// Sign in anonymously, then load data
+	  firebase.auth().signInAnonymously()
+	    .then(() => {
+	      console.log("✅ Signed in anonymously – now loading data");
+	
+	      // Safe to hit Firestore now that request.auth != null
+	      loadPlayersFromFirebase();
+	
+	      loadCommandsFromFirebase().then(() => {
+	        populateCategoryDropdown();
+	        renderCommands();
+	      });
+	
+	      loadHistoryFromFirebase();
+	    })
+	    .catch(error => {
+	      console.error("❌ Anonymous sign-in failed:", error.message);
+	    });
+
 	
 	// Apply dark mode from localStorage on load
 		const darkPref = localStorage.getItem("darkModeEnabled");
