@@ -1585,6 +1585,8 @@ function renderScoringButtons(challengeText) {
     scores = [44, 88, 132];
   } else if (text.includes("bow")) {
     scores = [42, 67];
+  } else if (text.includes("neck")) {
+    scores = [48, 73];
   } else if (text.includes("61")) {
     scores = [61];
   } else if (text.includes("101")) {
@@ -1634,6 +1636,7 @@ function renderScoringButtons(challengeText) {
 	  if (text.includes("61")) return 61;             // 3x 61
 	  if (text.includes("split")) return 132;
 	  if (text.includes("bow")) return 67;
+	  if (text.includes("neck")) return 73;
 	  if (text.includes("any") && base >= 1 && base <= 20) return base * 9;
 	  if (text.includes("101")) return 101;
 	  if (text.includes("fore")) return 180;
