@@ -137,12 +137,6 @@
 			<span class="label-text">🌀 Chaos Mode</span>
 		</label>
 
-		<label class="switch-label">
-		<input type="checkbox" id="funOnlyMode" />
-		<span class="switch-slider"></span>
-		<span class="label-text">🎉 Fun Only Mode</span>
-		</label>
-
 		</div>
 		<br />
 	  </div>
@@ -793,7 +787,6 @@ function startGame() {
   doubleTroubleEnabled = document.getElementById("doubleTroubleMode").checked;
   streakBonusEnabled = document.getElementById("streakBonusMode").checked;
   driftModeEnabled = document.getElementById("driftMode").checked;
-  funOnlyModeEnabled = document.getElementById("funOnlyMode").checked;
 
   gameStarted = true;
   currentChallengeIndex = 0;
@@ -1039,79 +1032,120 @@ function startGame() {
 
   // Handle submitting score for current player/challenge
 	function submitScore() {
-	//const confirmSubmit = confirm("Submit this score?");
-	//if (!confirmSubmit) return;
 	if (!gameStarted) return;
+
+	// 1. Read and validate input
 	const val = scoreInput.value.trim();
 	if (!val) return alert("Please enter a score");
 	let scoreVal = parseInt(val, 10);
 	if (isNaN(scoreVal) || scoreVal < 0) return alert("Score must be non-negative");
 
-	// ── SNAPSHOT before any changes:
+	// 2. Snapshot for undo
 	const player = activePlayers[currentPlayerIndex];
 	const oldScore = player.score;
 	const oldStreak = playerStreaks[player.name];
 	const snapshot = {
-		playerIndex: currentPlayerIndex,
+		playerIndex:        currentPlayerIndex,
 		oldScore,
 		oldStreak,
-		prevPlayerIndex: currentPlayerIndex,
+		prevPlayerIndex:    currentPlayerIndex,
 		prevChallengeIndex: currentChallengeIndex,
-		historyLength: gameHistory.length
+		historyLength:      gameHistory.length
 	};
 
+	// 3. Compute modifiers
+	let finalScore = scoreVal;
+	const name            = currentGameChallenges[currentChallengeIndex].text;
+	const isBDR           = name === "Original BDR";
+	const isPorter        = name === "Porter";
+	const isHardcore      = hardcoreRounds.includes(currentChallengeIndex);
+	const isJoker         = jokerRounds.includes(currentChallengeIndex);
+	const isDoubleTrouble = doubleTroubleEnabled &&
+							scoreVal === getMaxPossibleScoreForChallenge(name);
 
-    // Check for Joker challenge
-		let finalScore = scoreVal;
-		const challengeText = currentGameChallenges[currentChallengeIndex]?.text || "";
-		const isHardcore = hardcoreRounds.includes(currentChallengeIndex);
-		const isJoker    = jokerRounds.includes(currentChallengeIndex);
-		const isDoubleTrouble = doubleTroubleEnabled &&
-		  scoreVal === getMaxPossibleScoreForChallenge(challengeText);
-
-		if (isJoker && isDoubleTrouble) {
-		  finalScore *= 4;
-		    showScorePop(finalScore, false, "mega-combo");
-		  gameHistory.push(`🎭💥 MEGA COMBO! ${player.name} hit max score on a JOKER challenge — score QUADRUPLED to ${finalScore}!`);
-		} else if (isJoker) {
-		  finalScore *= 2;
-		  	showScorePop(finalScore, false, "joker");
-		  gameHistory.push(`🃏 JOKER! ${player.name} scored double points: ${finalScore}`);
-		} else if (isDoubleTrouble) {
-		  finalScore *= 2;
-		  	showScorePop(finalScore, false, "double-trouble");
-		  gameHistory.push(`💥 DOUBLE TROUBLE! ${player.name} hit the max and scored ${finalScore}`);
-		} else {
+	// 4. Apply Joker / Hardcore / Double-Trouble modifiers & show pop
+	if (isJoker && isDoubleTrouble) {
+		finalScore *= 4;
+		if (!isBDR && !isPorter) {
+		showScorePop(finalScore, false, "mega-combo");
+		}
+		gameHistory.push(
+		`🎭💥 MEGA COMBO! ${player.name} hit max score on a JOKER challenge — score QUADRUPLED to ${finalScore}!`
+		);
+	}
+	else if (isJoker) {
+		finalScore *= 2;
+		if (!isBDR && !isPorter) {
+		showScorePop(finalScore, false, "joker");
+		}
+		gameHistory.push(
+		`🃏 JOKER! ${player.name} scored double points: ${finalScore}`
+		);
+	}
+	else if (isDoubleTrouble) {
+		finalScore *= 2;
+		if (!isBDR && !isPorter) {
+		showScorePop(finalScore, false, "double-trouble");
+		}
+		gameHistory.push(
+		`💥 DOUBLE TROUBLE! ${player.name} hit the max and scored ${finalScore}`
+		);
+	}
+	else {
+		// only show the base pop now for non-BDR/Porter
+		if (!isBDR && !isPorter) {
 		showScorePop(finalScore);
 		}
+	}
 
-
-		player.score += finalScore;
-		//showScorePop(finalScore);
-		if (navigator.vibrate) navigator.vibrate(200); // 200ms buzz on success
-
-		// Increment streak
-		if (streakBonusEnabled) {
-		  playerStreaks[player.name] = (playerStreaks[player.name] || 0) + 1;
-
-		  if (playerStreaks[player.name] >= 3) {
-			player.score += 20;
-			scoreVal += 20; // Add bonus to scoreVal for history
-				showScorePop(20, false, "streak");
-			gameHistory.push(`🔥 STREAK BONUS! ${player.name} completed 3 in a row and earned +20 points`);
-			playerStreaks[player.name] = 0; // Reset streak
-		  }
+	// 5. Handle BDR / Porter bonus and final pop
+	if (isBDR) {
+		const gotBDR = confirm("Award BDR bonus of 12 points?");
+		if (gotBDR) {
+		finalScore += 12;
+		gameHistory.push(`🎉 BDR BONUS! +12 points`);
 		}
-
-		// ✔ Log to history
-		gameHistory.push(`${player.name} scored ${scoreVal} on challenge "${currentGameChallenges[currentChallengeIndex].text}" (Total: ${player.score})`);
-		// ── PUSH SNAPSHOT to undo stack ──
-		lastActionsStack.push(snapshot);
-		saveHistoryToFirebase();
-		renderHistory();
-		showTurnFlash("success");
-		nextTurn();
+		// one pop: base + optional bonus
+		showScorePop(finalScore, false, "bdr", scoreVal);
+	}
+	else if (isPorter) {
+		const gotPorter = confirm("Award Porter bonus of 40 points?");
+		if (gotPorter) {
+		finalScore += 40;
+		gameHistory.push(`🥃 PORTER BONUS! +40 points`);
 		}
+		showScorePop(finalScore, false, "porter", scoreVal);
+	}
+
+	// 6. Apply score, vibrate, streaks
+	player.score += finalScore;
+	if (navigator.vibrate) navigator.vibrate(200);
+
+	if (streakBonusEnabled) {
+		playerStreaks[player.name]++;
+		if (playerStreaks[player.name] >= 3) {
+		player.score += 20;
+		scoreVal += 20; // include in history count
+		showScorePop(20, false, "streak");
+		gameHistory.push(
+			`🔥 STREAK BONUS! ${player.name} completed 3 in a row and earned +20 points`
+		);
+		playerStreaks[player.name] = 0;
+		}
+	}
+
+	// 7. Log the result and push undo snapshot
+	gameHistory.push(
+		`${player.name} scored ${scoreVal} on challenge "${name}" (Total: ${player.score})`
+	);
+	lastActionsStack.push(snapshot);
+	saveHistoryToFirebase();
+	renderHistory();
+	showTurnFlash("success");
+
+	// 8. Advance turn
+	nextTurn();
+	}
 
   // Handle fail challenge (half points rounded up, min 1, unless already 0)
 	function failChallenge() {
@@ -1667,6 +1701,10 @@ function renderScoringButtons(challengeText) {
 		pop.textContent = `STREAK BONUS! +${amount}`;
 	} else if (type === "drift-fail") {
 		pop.textContent = `PERCENTAGE PENALTY! -${amount}`;
+	} else if (type === "bdr") {
+	pop.textContent = `🎉 BDR BONUS +${amount}`;
+	} else if (type === "porter") {
+	pop.textContent = `🥃 PORTER BONUS +${amount}`;
 	}
 	else {
 		// No specific type given — fallback to default
