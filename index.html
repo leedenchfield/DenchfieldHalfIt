@@ -921,6 +921,11 @@ function startGame() {
     const middleChallenges = currentGameChallenges.slice(1);
     shuffleArray(middleChallenges);
     currentGameChallenges = [firstChallenge, ...middleChallenges, lastChallenge];
+	currentGameChallenges.forEach(ch => {
+	if (ch.text === "Menzies") {
+		delete ch.generatedNumber;
+	}
+	});
 
     const hardcoreCount = useHardcore
       ? parseInt(document.getElementById("hardcoreChaosCount").value, 10) || 0
