@@ -314,6 +314,15 @@
 	{ min: 141, max: 179,  weight:  5 }
 	];
 
+	const checkoutBuckets = [
+	{ min: 41, max: 60,  weight: 40 },  // Easy
+	{ min: 61, max: 80,  weight: 25 },  // Medium
+	{ min: 81, max: 100, weight: 20 },  // Harder
+	{ min: 101, max: 130, weight: 10 }, // Tough
+	{ min: 131, max: 170, weight: 5 }   // Brutal
+	];
+
+
 	function pickWeightedRandom(buckets) {
 	const total = buckets.reduce((sum, b) => sum + b.weight, 0);
 	let r = Math.random() * total;
@@ -921,6 +930,18 @@ function startGame() {
     const middleChallenges = currentGameChallenges.slice(1);
     shuffleArray(middleChallenges);
     currentGameChallenges = [firstChallenge, ...middleChallenges, lastChallenge];
+	// 🎯 Replace any generic "Checkout" challenges with weighted ones
+	currentGameChallenges.forEach(challenge => {
+	if (challenge.text === "Checkout") {
+		let score;
+		do {
+		score = pickWeightedRandom(checkoutBuckets);
+		} while (!isValidCheckoutScore(score)); // ensure it's a valid finish
+
+		challenge.text = `Checkout ${score}`;
+		challenge.description = `Checkout ${score} using 3 or less darts`;
+	}
+	});
 	currentGameChallenges.forEach(ch => {
 	if (ch.text === "Menzies") {
 		delete ch.generatedNumber;
