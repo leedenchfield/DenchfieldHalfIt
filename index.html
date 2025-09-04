@@ -932,7 +932,7 @@ function startGame() {
     currentGameChallenges = [firstChallenge, ...middleChallenges, lastChallenge];
 	// 🎯 Replace any generic "Checkout" challenges with weighted ones
 	currentGameChallenges.forEach(challenge => {
-	if (challenge.text === "Checkout") {
+	if (challenge.text.includes("Checkout")) {
 		let score;
 		do {
 		score = pickWeightedRandom(checkoutBuckets);
