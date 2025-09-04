@@ -942,9 +942,16 @@ function startGame() {
 		challenge.description = `Checkout ${score} using 3 or less darts`;
 	}
 	});
+		currentGameChallenges.forEach(ch => {
+		if (ch.text === "Menzies") {
+			delete ch.generatedNumber;
+		}
+		});
+
+	// 🎯 Selects a number to be used in the Straight Ones challenge
 	currentGameChallenges.forEach(ch => {
-	if (ch.text === "Menzies") {
-		delete ch.generatedNumber;
+		if (ch.text === "Straight") {
+			ch.selectedNumber = Math.floor(Math.random() * 20) + 1;
 	}
 	});
 
@@ -1030,6 +1037,14 @@ function startGame() {
       }
       displayText = `Menzies ${challenge.generatedNumber}`;
     }
+
+	// Straight special case
+	if (challenge.text === "Straight") {
+	if (!challenge.selectedNumber) {
+		challenge.selectedNumber = Math.floor(Math.random() * 20) + 1;
+	}
+	displayText = `Straight ${challenge.selectedNumber}`;
+	}
   }
 
   // Build UI text
@@ -1047,7 +1062,7 @@ function startGame() {
     `"${displayText}" (${challenge.description || "No description"})${extra}`;
 
   // Prepare scoring UI
-  renderScoringButtons(challenge.text);
+  renderScoringButtons(displayText);
   scoreInput.value = "";
   scoreInput.focus();
 
@@ -1596,6 +1611,26 @@ function renderScoringButtons(challengeText) {
   const base = match ? parseInt(match[0], 10) : null;
   let scores = [];
 
+  	// ── Straight XX handler ──
+	if (text.includes("straight ") && base >= 1 && base <= 20) {
+		scoreInput.style.display     = "none";
+		buttonsArea.style.display    = "block";
+		submitScoreBtn.style.display = "none";
+
+		for (let hits = 1; hits <= 9; hits++) {
+		const val = base * hits;
+		const btn = document.createElement("button");
+		btn.textContent = `${hits} hit${hits > 1 ? "s" : ""} = ${val}`;
+		btn.classList.add("dynamic-btn");
+		btn.onclick = () => {
+			scoreInput.value = val;
+			submitScore();
+		};
+		buttonsArea.appendChild(btn);
+		}
+		return;
+	}
+
    // 🎯 Detect if this is a Checkout challenge
   const isCheckout = text.includes("checkout");
 
@@ -1607,6 +1642,7 @@ function renderScoringButtons(challengeText) {
       submitScoreBtn.style.display = "inline-block";
       return;
     }
+
 
     // ✅ Show single button
     scoreInput.style.display = "none";
