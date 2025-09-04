@@ -948,6 +948,14 @@ function startGame() {
 		}
 		});
 
+	// Clear out old Sequence lists so they regenerate on next display
+		currentGameChallenges.forEach(ch => {
+		if (ch.text === "Sequence") {
+			delete ch.sequenceList;
+		}
+		});
+
+
 	// 🎯 Selects a number to be used in the Straight Ones challenge
 	currentGameChallenges.forEach(ch => {
 		if (ch.text === "Straight") {
@@ -1045,6 +1053,26 @@ function startGame() {
 	}
 	displayText = `Straight ${challenge.selectedNumber}`;
 	}
+
+	// Sequence special case
+	if (challenge.text === "Sequence") {
+	if (!challenge.sequenceList) {
+		// 1) Build all straight-through triples from 1→2→3 up to 18→19→20
+		const sequences = [];
+		for (let start = 1; start <= 18; start++) {
+		sequences.push([start, start + 1, start + 2]);
+		}
+		// 2) Add the special finish: 19,20,25 (bull)
+		sequences.push([19, 20, 25]);
+
+		// 3) Randomly pick one of those sequences
+		challenge.sequenceList =
+		sequences[Math.floor(Math.random() * sequences.length)];
+	}
+	// Turn it into "Sequence 4, 5, 6" (or "Sequence 19, 20, 25")
+	displayText = `Sequence ${challenge.sequenceList.join(", ")}`;
+	}
+
   }
 
   // Build UI text
@@ -1629,6 +1657,28 @@ function renderScoringButtons(challengeText) {
 		buttonsArea.appendChild(btn);
 		}
 		return;
+	}
+
+	// Sequence handler → one button showing total
+	if (text.startsWith("sequence ")) {
+	// pull out the three numbers
+	const nums = challengeText.match(/\d+/g).map(Number);
+	const sum  = nums.reduce((a, b) => a + b, 0);
+
+	scoreInput.style.display     = "none";
+	buttonsArea.style.display    = "block";
+	submitScoreBtn.style.display = "none";
+
+	const btn = document.createElement("button");
+	btn.textContent = sum;
+	btn.classList.add("dynamic-btn");
+	btn.onclick = () => {
+		scoreInput.value = sum;
+		submitScore();
+	};
+	buttonsArea.appendChild(btn);
+
+	return;
 	}
 
    // 🎯 Detect if this is a Checkout challenge
